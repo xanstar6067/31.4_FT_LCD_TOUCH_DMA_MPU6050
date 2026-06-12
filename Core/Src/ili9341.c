@@ -412,6 +412,9 @@ void ILI9341_DrawImage_DMA(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const
 }
 
 void ILI9341_DrawImage_DMA_1D(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint8_t* data) {
+    uint32_t offset = 0U;
+    uint32_t bytes_to_send;
+
     if ((x >= ILI9341_SCREEN_WIDTH) || (y >= ILI9341_SCREEN_HEIGHT)) return;
     if ((x + w - 1) >= ILI9341_SCREEN_WIDTH) return;
     if ((y + h - 1) >= ILI9341_SCREEN_HEIGHT) return;
@@ -420,17 +423,16 @@ void ILI9341_DrawImage_DMA_1D(uint16_t x, uint16_t y, uint16_t w, uint16_t h, co
     ILI9341_SetAddressWindow(x, y, x + w - 1, y + h - 1);
 
     HAL_GPIO_WritePin(ILI9341_DC_GPIO_Port, ILI9341_DC_Pin, GPIO_PIN_SET);
-    for (uint16_t row = 0; row < h; row++) {
-        uint32_t offset = row * w * 2;
-        uint16_t bytes_to_send = w * 2;
-        while (bytes_to_send > 0) {
-            uint16_t chunk_size = (bytes_to_send > 65535) ? 65535 : bytes_to_send;
-            dma_transfer_complete = 0;
-            HAL_SPI_Transmit_DMA(&ILI9341_SPI_PORT, &data[offset], chunk_size);
-            ILI9341_WaitForDMA();
-            offset += chunk_size;
-            bytes_to_send -= chunk_size;
-        }
+    bytes_to_send = (uint32_t)w * h * 2U;
+    while (bytes_to_send > 0U) {
+        uint16_t chunk_size =
+            (bytes_to_send > 65534U) ? 65534U : (uint16_t)bytes_to_send;
+
+        dma_transfer_complete = 0;
+        HAL_SPI_Transmit_DMA(&ILI9341_SPI_PORT, &data[offset], chunk_size);
+        ILI9341_WaitForDMA();
+        offset += chunk_size;
+        bytes_to_send -= chunk_size;
     }
     ILI9341_Unselect();
 }
