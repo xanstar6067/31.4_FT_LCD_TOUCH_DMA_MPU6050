@@ -6,6 +6,7 @@
 #include "marble_maze_logic.h"
 #include "mpu6050_page.h"
 #include "orb_hunt_logic.h"
+#include "space_dodger_logic.h"
 #include "system_info_page.h"
 #include "tilt_breaker_logic.h"
 
@@ -16,6 +17,7 @@ typedef enum {
     ARCADE_PAGE_GRAVITY_PONG,
     ARCADE_PAGE_TILT_BREAKER,
     ARCADE_PAGE_MARBLE_MAZE,
+    ARCADE_PAGE_SPACE_DODGER,
     ARCADE_PAGE_COUNT
 } ArcadePageId;
 
@@ -28,6 +30,7 @@ typedef struct {
     GravityPongState gravity_pong;
     TiltBreakerState tilt_breaker;
     MarbleMazeState marble_maze;
+    SpaceDodgerState space_dodger;
 } ArcadeCollection;
 
 void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed);
