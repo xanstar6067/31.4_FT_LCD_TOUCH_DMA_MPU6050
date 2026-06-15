@@ -1,6 +1,7 @@
 #include "arcade_collection.h"
 
 #include "gravity_pong_render.h"
+#include "marble_maze_render.h"
 #include "orb_hunt_render.h"
 #include "tilt_breaker_render.h"
 
@@ -35,6 +36,9 @@ static void ArcadeCollection_RenderActive(ArcadeCollection *arcade) {
         case ARCADE_PAGE_TILT_BREAKER:
             TiltBreakerRender_Init(&arcade->tilt_breaker);
             break;
+        case ARCADE_PAGE_MARBLE_MAZE:
+            MarbleMazeRender_Init(&arcade->marble_maze);
+            break;
         default:
             break;
     }
@@ -52,6 +56,8 @@ void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed) {
                      ArcadeCollection_NextSeed(arcade));
     TiltBreaker_Init(&arcade->tilt_breaker,
                      ArcadeCollection_NextSeed(arcade));
+    MarbleMaze_Init(&arcade->marble_maze,
+                    ArcadeCollection_NextSeed(arcade));
     ArcadeCollection_RenderActive(arcade);
 }
 
@@ -88,6 +94,14 @@ void ArcadeCollection_Update(ArcadeCollection *arcade,
             TiltBreakerRender_Frame(&arcade->tilt_breaker, event);
             break;
         }
+        case ARCADE_PAGE_MARBLE_MAZE: {
+            MarbleMazeEvent event =
+                MarbleMaze_Update(&arcade->marble_maze,
+                                  mpu_data->accel_x,
+                                  mpu_data->accel_y);
+            MarbleMazeRender_Frame(&arcade->marble_maze, event);
+            break;
+        }
         default:
             break;
     }
@@ -119,6 +133,9 @@ void ArcadeCollection_RestartActive(ArcadeCollection *arcade) {
             break;
         case ARCADE_PAGE_TILT_BREAKER:
             TiltBreaker_Init(&arcade->tilt_breaker, seed);
+            break;
+        case ARCADE_PAGE_MARBLE_MAZE:
+            MarbleMaze_Init(&arcade->marble_maze, seed);
             break;
         default:
             break;
