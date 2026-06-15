@@ -4,10 +4,12 @@
 #include <stdint.h>
 #include "gravity_pong_logic.h"
 #include "orb_hunt_logic.h"
+#include "tilt_breaker_logic.h"
 
 typedef enum {
     ARCADE_GAME_ORB_HUNT = 0,
     ARCADE_GAME_GRAVITY_PONG,
+    ARCADE_GAME_TILT_BREAKER,
     ARCADE_GAME_COUNT
 } ArcadeGameId;
 
@@ -16,6 +18,7 @@ typedef struct {
     uint32_t seed;
     OrbHuntState orb_hunt;
     GravityPongState gravity_pong;
+    TiltBreakerState tilt_breaker;
 } ArcadeCollection;
 
 void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed);
