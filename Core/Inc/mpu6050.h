@@ -27,14 +27,14 @@ typedef struct {
     int16_t accel_x;
     int16_t accel_y;
     int16_t accel_z;
+    int16_t temperature;
     int16_t gyro_x;
     int16_t gyro_y;
     int16_t gyro_z;
 } MPU6050_Data_t;
 
-// Функции
-void MPU6050_Init(void);
+uint8_t MPU6050_Init(void);
 uint8_t MPU6050_Check(void);
-void MPU6050_ReadData(MPU6050_Data_t *data);
+HAL_StatusTypeDef MPU6050_ReadData(MPU6050_Data_t *data);
 
 #endif /* INC_MPU6050_H_ */

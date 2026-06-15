@@ -93,11 +93,12 @@ static uint32_t Arcade_CreateSeed(const MPU6050_Data_t *data) {
 
 static void Arcade_ProcessTick(void) {
     MPU6050_Data_t mpu_data;
+    HAL_StatusTypeDef mpu_status;
 
-    MPU6050_ReadData(&mpu_data);
+    mpu_status = MPU6050_ReadData(&mpu_data);
     ArcadeCollection_Update(&arcade,
-                            mpu_data.accel_x,
-                            mpu_data.accel_y);
+                            &mpu_data,
+                            mpu_status);
 }
 
 static void Arcade_ProcessButton(void) {

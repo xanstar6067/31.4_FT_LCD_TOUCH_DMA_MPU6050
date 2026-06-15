@@ -22,6 +22,10 @@ static void ArcadeCollection_RenderActive(ArcadeCollection *arcade) {
         case ARCADE_PAGE_SYSTEM_INFO:
             SystemInfoPage_Render(&arcade->system_info);
             break;
+        case ARCADE_PAGE_MPU6050:
+            arcade->mpu6050.renderer_initialized = 0U;
+            MPU6050Page_Render(&arcade->mpu6050);
+            break;
         case ARCADE_PAGE_ORB_HUNT:
             OrbHuntRender_Init(&arcade->orb_hunt);
             break;
@@ -41,6 +45,7 @@ void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed) {
     arcade->active_page = ARCADE_PAGE_SYSTEM_INFO;
 
     SystemInfoPage_Init(&arcade->system_info);
+    MPU6050Page_Init(&arcade->mpu6050);
     OrbHunt_Init(&arcade->orb_hunt,
                  ArcadeCollection_NextSeed(arcade));
     GravityPong_Init(&arcade->gravity_pong,
@@ -51,26 +56,35 @@ void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed) {
 }
 
 void ArcadeCollection_Update(ArcadeCollection *arcade,
-                             int16_t accel_x,
-                             int16_t accel_y) {
+                             const MPU6050_Data_t *mpu_data,
+                             HAL_StatusTypeDef mpu_status) {
     switch (arcade->active_page) {
         case ARCADE_PAGE_SYSTEM_INFO:
             break;
+        case ARCADE_PAGE_MPU6050:
+            MPU6050Page_Update(&arcade->mpu6050,
+                               mpu_data,
+                               mpu_status);
+            break;
         case ARCADE_PAGE_ORB_HUNT: {
             OrbHuntEvent event =
-                OrbHunt_Update(&arcade->orb_hunt, accel_x, accel_y);
+                OrbHunt_Update(&arcade->orb_hunt,
+                               mpu_data->accel_x,
+                               mpu_data->accel_y);
             OrbHuntRender_Frame(&arcade->orb_hunt, event);
             break;
         }
         case ARCADE_PAGE_GRAVITY_PONG: {
             GravityPongEvent event =
-                GravityPong_Update(&arcade->gravity_pong, accel_x);
+                GravityPong_Update(&arcade->gravity_pong,
+                                   mpu_data->accel_x);
             GravityPongRender_Frame(&arcade->gravity_pong, event);
             break;
         }
         case ARCADE_PAGE_TILT_BREAKER: {
             TiltBreakerEvent event =
-                TiltBreaker_Update(&arcade->tilt_breaker, accel_x);
+                TiltBreaker_Update(&arcade->tilt_breaker,
+                                   mpu_data->accel_x);
             TiltBreakerRender_Frame(&arcade->tilt_breaker, event);
             break;
         }
@@ -92,6 +106,10 @@ void ArcadeCollection_RestartActive(ArcadeCollection *arcade) {
     switch (arcade->active_page) {
         case ARCADE_PAGE_SYSTEM_INFO:
             SystemInfoPage_Refresh(&arcade->system_info);
+            break;
+        case ARCADE_PAGE_MPU6050:
+            MPU6050_Init();
+            MPU6050Page_Init(&arcade->mpu6050);
             break;
         case ARCADE_PAGE_ORB_HUNT:
             OrbHunt_Init(&arcade->orb_hunt, seed);
