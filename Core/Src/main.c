@@ -26,6 +26,7 @@
 #include "mpu6050.h"
 #include "arcade_collection.h"
 #include "single_button.h"
+#include "w25qxx.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -106,10 +107,10 @@ static void Arcade_ProcessButton(void) {
         SingleButton_Update(&ukey_button, pressed, HAL_GetTick());
 
     if (event == SINGLE_BUTTON_EVENT_SHORT_PRESS) {
-        ArcadeCollection_NextGame(&arcade);
+        ArcadeCollection_NextPage(&arcade);
         arcade_tick_pending = 0U;
     } else if (event == SINGLE_BUTTON_EVENT_LONG_PRESS) {
-        ArcadeCollection_RestartGame(&arcade);
+        ArcadeCollection_RestartActive(&arcade);
         arcade_tick_pending = 0U;
     }
 }
@@ -119,6 +120,7 @@ void init(void) {
 
     ILI9341_Unselect();
     ILI9341_TouchUnselect();
+    W25Qxx_Unselect();
     ILI9341_Init();
     MPU6050_Init();
     MPU6050_ReadData(&seed_data);
@@ -426,6 +428,10 @@ static void MX_DMA_Init(void) {
 static void MX_GPIO_Init(void) {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   /* USER CODE BEGIN MX_GPIO_Init_1 */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  HAL_GPIO_WritePin(W25Q_CS_GPIO_Port,
+                    W25Q_CS_Pin,
+                    GPIO_PIN_SET);
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
@@ -481,6 +487,11 @@ static void MX_GPIO_Init(void) {
   HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
+  GPIO_InitStruct.Pin = W25Q_CS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(W25Q_CS_GPIO_Port, &GPIO_InitStruct);
   /* USER CODE END MX_GPIO_Init_2 */
 }
 

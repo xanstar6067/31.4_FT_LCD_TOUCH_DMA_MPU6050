@@ -16,6 +16,9 @@ volatile uint8_t dma_transfer_complete = 1; // 1 - передача заверш
 
 // Вспомогательные функции
 static void ILI9341_Select(void) {
+    HAL_GPIO_WritePin(W25Q_CS_GPIO_Port,
+                      W25Q_CS_Pin,
+                      GPIO_PIN_SET);
     HAL_GPIO_WritePin(ILI9341_CS_GPIO_Port, ILI9341_CS_Pin, GPIO_PIN_RESET);
 }
 

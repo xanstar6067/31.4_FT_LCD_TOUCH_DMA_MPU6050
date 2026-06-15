@@ -76,6 +76,10 @@ void Error_Handler(void);
 #define ILI9341_TOUCH_CS_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+#ifndef W25Q_CS_Pin
+#define W25Q_CS_Pin GPIO_PIN_4
+#define W25Q_CS_GPIO_Port GPIOA
+#endif
 
 /* USER CODE END Private defines */
 
