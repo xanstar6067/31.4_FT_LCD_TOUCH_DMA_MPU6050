@@ -143,134 +143,6 @@ static uint8_t DodgerRender_PointInShip(
     return 1U;
 }
 
-static uint16_t DodgerRender_StaticPixel(
-    const SpaceDodgerState *game,
-    int16_t x,
-    int16_t y) {
-    uint8_t column;
-    uint8_t row;
-    uint8_t bright;
-    int16_t star_x;
-    int16_t star_y;
-    int16_t dx;
-    int16_t dy;
-
-    if ((y < SPACE_DODGER_PLAYFIELD_TOP) ||
-        (x < 0) ||
-        (x >= SPACE_DODGER_SCREEN_WIDTH)) {
-        return DODGER_BACKGROUND_COLOR;
-    }
-
-    column = (uint8_t)(x / DODGER_STAR_CELL_WIDTH);
-    row = (uint8_t)(
-        (y - SPACE_DODGER_PLAYFIELD_TOP) /
-        DODGER_STAR_CELL_HEIGHT);
-    if ((column >= DODGER_STAR_COLUMNS) ||
-        (row >= DODGER_STAR_ROWS)) {
-        return DODGER_BACKGROUND_COLOR;
-    }
-
-    DodgerRender_StarPosition(game, column, row,
-                              &star_x, &star_y, &bright);
-    dx = x - star_x;
-    dy = y - star_y;
-    if ((dx == 0) && (dy == 0)) {
-        return (bright >= 2U) ?
-               ILI9341_WHITE : DODGER_STAR_DIM_COLOR;
-    }
-    if ((bright == 3U) &&
-        (((dx == 0) && ((dy == -1) || (dy == 1))) ||
-         ((dy == 0) && ((dx == -1) || (dx == 1))))) {
-        return DODGER_STAR_DIM_COLOR;
-    }
-    return DODGER_BACKGROUND_COLOR;
-}
-
-static uint16_t DodgerRender_ComposedPixel(
-    const SpaceDodgerState *game,
-    int16_t ship_x,
-    int16_t ship_y,
-    uint8_t ship_visible,
-    int16_t x,
-    int16_t y) {
-    uint16_t color;
-
-    if ((ship_visible != 0U) &&
-        (DodgerRender_PointInShip(
-            x, y, ship_x, ship_y, &color) != 0U)) {
-        return color;
-    }
-
-    for (uint8_t i = 0U; i < SPACE_DODGER_MAX_BULLETS; i++) {
-        const SpaceDodgerBullet *bullet = &game->bullets[i];
-        int16_t bullet_x;
-        int16_t bullet_y;
-
-        if (bullet->active == 0U) {
-            continue;
-        }
-        bullet_x = DodgerRender_Round(bullet->x);
-        bullet_y = DodgerRender_Round(bullet->y);
-        if ((x >= (bullet_x - 1)) &&
-            (x <= (bullet_x + 1)) &&
-            (y >= (bullet_y - 4)) &&
-            (y <= (bullet_y + 3))) {
-            return ((x == bullet_x) && (y <= bullet_y)) ?
-                   ILI9341_WHITE : DODGER_BULLET_COLOR;
-        }
-    }
-
-    for (uint8_t i = 0U; i < SPACE_DODGER_MAX_ASTEROIDS; i++) {
-        const SpaceDodgerAsteroid *asteroid = &game->asteroids[i];
-        int16_t asteroid_x;
-        int16_t asteroid_y;
-        int16_t crater_x;
-        int16_t crater_y;
-        int16_t crater_radius;
-
-        if (asteroid->active == 0U) {
-            continue;
-        }
-        asteroid_x = DodgerRender_Round(asteroid->x);
-        asteroid_y = DodgerRender_Round(asteroid->y);
-        if (DodgerRender_PointInCircle(
-                x, y, asteroid_x, asteroid_y,
-                asteroid->radius) == 0U) {
-            continue;
-        }
-
-        crater_x = asteroid_x +
-            (((asteroid->style & 1U) != 0U) ?
-             (asteroid->radius / 3) :
-             -(asteroid->radius / 3));
-        crater_y = asteroid_y +
-            (((asteroid->style & 2U) != 0U) ?
-             (asteroid->radius / 4) :
-             -(asteroid->radius / 4));
-        crater_radius = asteroid->radius / 4;
-        if (crater_radius < 2) {
-            crater_radius = 2;
-        }
-        if (DodgerRender_PointInCircle(
-                x, y, crater_x, crater_y,
-                crater_radius) != 0U) {
-            return DODGER_CRATER_COLOR;
-        }
-        if (DodgerRender_PointInCircle(
-                x, y,
-                asteroid_x - (asteroid->radius / 3),
-                asteroid_y - (asteroid->radius / 3),
-                1) != 0U) {
-            return ILI9341_WHITE;
-        }
-        return (asteroid->health > 1U) ?
-               DODGER_ASTEROID_COLOR :
-               DODGER_ASTEROID_DAMAGED_COLOR;
-    }
-
-    return DodgerRender_StaticPixel(game, x, y);
-}
-
 static void DodgerRender_ClipRect(DodgerRenderRect *rect) {
     if (rect->x0 < 0) {
         rect->x0 = 0;
@@ -302,15 +174,263 @@ static void DodgerRender_IncludeRect(DodgerRenderRect *destination,
     }
 }
 
+static uint8_t DodgerRender_RectsOverlap(
+    DodgerRenderRect first,
+    DodgerRenderRect second) {
+    return (first.x0 <= second.x1) &&
+           (first.x1 >= second.x0) &&
+           (first.y0 <= second.y1) &&
+           (first.y1 >= second.y0);
+}
+
+static void DodgerRender_PutPixel(DodgerRenderRect rect,
+                                  uint16_t width,
+                                  uint16_t height,
+                                  int16_t x,
+                                  int16_t y,
+                                  uint16_t color) {
+    uint32_t offset;
+
+    if ((x < rect.x0) || (x > rect.x1) ||
+        (y < rect.y0) || (y > rect.y1)) {
+        return;
+    }
+
+    offset =
+        (((uint32_t)(y - rect.y0) * width) +
+         (uint32_t)(x - rect.x0)) * 2U;
+    if (offset >= ((uint32_t)width * height * 2U)) {
+        return;
+    }
+    dodger_patch_buffer[offset] = (uint8_t)(color >> 8);
+    dodger_patch_buffer[offset + 1U] = (uint8_t)(color & 0xFFU);
+}
+
+static void DodgerRender_FillPatch(uint16_t width,
+                                   uint16_t height,
+                                   uint16_t color) {
+    uint32_t pixel_count = (uint32_t)width * height;
+    uint8_t high = (uint8_t)(color >> 8);
+    uint8_t low = (uint8_t)(color & 0xFFU);
+
+    for (uint32_t i = 0U; i < pixel_count; i++) {
+        dodger_patch_buffer[i * 2U] = high;
+        dodger_patch_buffer[(i * 2U) + 1U] = low;
+    }
+}
+
+static void DodgerRender_DrawCircleToPatch(
+    DodgerRenderRect rect,
+    uint16_t width,
+    uint16_t height,
+    int16_t center_x,
+    int16_t center_y,
+    int16_t radius,
+    uint16_t color) {
+    int16_t x0 = center_x - radius;
+    int16_t x1 = center_x + radius;
+    int16_t y0 = center_y - radius;
+    int16_t y1 = center_y + radius;
+
+    if (x0 < rect.x0) {
+        x0 = rect.x0;
+    }
+    if (x1 > rect.x1) {
+        x1 = rect.x1;
+    }
+    if (y0 < rect.y0) {
+        y0 = rect.y0;
+    }
+    if (y1 > rect.y1) {
+        y1 = rect.y1;
+    }
+
+    for (int16_t y = y0; y <= y1; y++) {
+        for (int16_t x = x0; x <= x1; x++) {
+            if (DodgerRender_PointInCircle(
+                    x, y, center_x, center_y, radius) != 0U) {
+                DodgerRender_PutPixel(
+                    rect, width, height, x, y, color);
+            }
+        }
+    }
+}
+
+static void DodgerRender_DrawStarsToPatch(
+    const SpaceDodgerState *game,
+    DodgerRenderRect rect,
+    uint16_t width,
+    uint16_t height) {
+    for (uint8_t row = 0U; row < DODGER_STAR_ROWS; row++) {
+        for (uint8_t column = 0U;
+             column < DODGER_STAR_COLUMNS;
+             column++) {
+            int16_t x;
+            int16_t y;
+            uint8_t bright;
+
+            DodgerRender_StarPosition(game, column, row,
+                                      &x, &y, &bright);
+            if ((x < (rect.x0 - 1)) || (x > (rect.x1 + 1)) ||
+                (y < (rect.y0 - 1)) || (y > (rect.y1 + 1))) {
+                continue;
+            }
+            if (bright == 3U) {
+                DodgerRender_PutPixel(
+                    rect, width, height, x - 1, y,
+                    DODGER_STAR_DIM_COLOR);
+                DodgerRender_PutPixel(
+                    rect, width, height, x + 1, y,
+                    DODGER_STAR_DIM_COLOR);
+                DodgerRender_PutPixel(
+                    rect, width, height, x, y - 1,
+                    DODGER_STAR_DIM_COLOR);
+                DodgerRender_PutPixel(
+                    rect, width, height, x, y + 1,
+                    DODGER_STAR_DIM_COLOR);
+            }
+            DodgerRender_PutPixel(
+                rect, width, height, x, y,
+                (bright >= 2U) ?
+                ILI9341_WHITE : DODGER_STAR_DIM_COLOR);
+        }
+    }
+}
+
+static void DodgerRender_DrawAsteroidsToPatch(
+    const SpaceDodgerState *game,
+    DodgerRenderRect rect,
+    uint16_t width,
+    uint16_t height) {
+    for (uint8_t i = 0U; i < SPACE_DODGER_MAX_ASTEROIDS; i++) {
+        const SpaceDodgerAsteroid *asteroid = &game->asteroids[i];
+        int16_t asteroid_x;
+        int16_t asteroid_y;
+        int16_t crater_x;
+        int16_t crater_y;
+        int16_t crater_radius;
+        DodgerRenderRect bounds;
+
+        if (asteroid->active == 0U) {
+            continue;
+        }
+        asteroid_x = DodgerRender_Round(asteroid->x);
+        asteroid_y = DodgerRender_Round(asteroid->y);
+        bounds.x0 = asteroid_x - asteroid->radius;
+        bounds.y0 = asteroid_y - asteroid->radius;
+        bounds.x1 = asteroid_x + asteroid->radius;
+        bounds.y1 = asteroid_y + asteroid->radius;
+        if (DodgerRender_RectsOverlap(rect, bounds) == 0U) {
+            continue;
+        }
+
+        DodgerRender_DrawCircleToPatch(
+            rect, width, height,
+            asteroid_x, asteroid_y, asteroid->radius,
+            (asteroid->health > 1U) ?
+            DODGER_ASTEROID_COLOR :
+            DODGER_ASTEROID_DAMAGED_COLOR);
+
+        crater_x = asteroid_x +
+            (((asteroid->style & 1U) != 0U) ?
+             (asteroid->radius / 3) :
+             -(asteroid->radius / 3));
+        crater_y = asteroid_y +
+            (((asteroid->style & 2U) != 0U) ?
+             (asteroid->radius / 4) :
+             -(asteroid->radius / 4));
+        crater_radius = asteroid->radius / 4;
+        if (crater_radius < 2) {
+            crater_radius = 2;
+        }
+        DodgerRender_DrawCircleToPatch(
+            rect, width, height,
+            crater_x, crater_y, crater_radius,
+            DODGER_CRATER_COLOR);
+        DodgerRender_DrawCircleToPatch(
+            rect, width, height,
+            asteroid_x - (asteroid->radius / 3),
+            asteroid_y - (asteroid->radius / 3),
+            1, ILI9341_WHITE);
+    }
+}
+
+static void DodgerRender_DrawBulletsToPatch(
+    const SpaceDodgerState *game,
+    DodgerRenderRect rect,
+    uint16_t width,
+    uint16_t height) {
+    for (uint8_t i = 0U; i < SPACE_DODGER_MAX_BULLETS; i++) {
+        const SpaceDodgerBullet *bullet = &game->bullets[i];
+        int16_t bullet_x;
+        int16_t bullet_y;
+        DodgerRenderRect bounds;
+
+        if (bullet->active == 0U) {
+            continue;
+        }
+        bullet_x = DodgerRender_Round(bullet->x);
+        bullet_y = DodgerRender_Round(bullet->y);
+        bounds.x0 = bullet_x - 1;
+        bounds.y0 = bullet_y - 4;
+        bounds.x1 = bullet_x + 1;
+        bounds.y1 = bullet_y + 3;
+        if (DodgerRender_RectsOverlap(rect, bounds) == 0U) {
+            continue;
+        }
+
+        for (int16_t y = bounds.y0; y <= bounds.y1; y++) {
+            for (int16_t x = bounds.x0; x <= bounds.x1; x++) {
+                DodgerRender_PutPixel(
+                    rect, width, height, x, y,
+                    ((x == bullet_x) && (y <= bullet_y)) ?
+                    ILI9341_WHITE : DODGER_BULLET_COLOR);
+            }
+        }
+    }
+}
+
+static void DodgerRender_DrawShipToPatch(
+    const SpaceDodgerState *game,
+    DodgerRenderRect rect,
+    uint16_t width,
+    uint16_t height) {
+    int16_t ship_x;
+    int16_t ship_y;
+    DodgerRenderRect bounds;
+
+    if (DodgerRender_ShipVisible(game) == 0U) {
+        return;
+    }
+
+    ship_x = DodgerRender_Round(game->ship.x);
+    ship_y = DodgerRender_Round(game->ship.y);
+    bounds.x0 = ship_x - 13;
+    bounds.y0 = ship_y - 10;
+    bounds.x1 = ship_x + 13;
+    bounds.y1 = ship_y + 10;
+    if (DodgerRender_RectsOverlap(rect, bounds) == 0U) {
+        return;
+    }
+
+    for (int16_t y = bounds.y0; y <= bounds.y1; y++) {
+        for (int16_t x = bounds.x0; x <= bounds.x1; x++) {
+            uint16_t color;
+
+            if (DodgerRender_PointInShip(
+                    x, y, ship_x, ship_y, &color) != 0U) {
+                DodgerRender_PutPixel(
+                    rect, width, height, x, y, color);
+            }
+        }
+    }
+}
+
 static uint8_t DodgerRender_DrawPatch(
     const SpaceDodgerState *game,
     DodgerRenderRect rect) {
-    int16_t ship_x = DodgerRender_Round(game->ship.x);
-    int16_t ship_y = DodgerRender_Round(game->ship.y);
-    uint8_t ship_visible = DodgerRender_ShipVisible(game);
     uint16_t width;
     uint16_t height;
-    uint32_t offset = 0U;
 
     DodgerRender_ClipRect(&rect);
     if ((rect.x1 < rect.x0) || (rect.y1 < rect.y0)) {
@@ -323,17 +443,16 @@ static uint8_t DodgerRender_DrawPatch(
         return 0U;
     }
 
-    for (int16_t y = rect.y0; y <= rect.y1; y++) {
-        for (int16_t x = rect.x0; x <= rect.x1; x++) {
-            uint16_t color =
-                DodgerRender_ComposedPixel(
-                    game, ship_x, ship_y,
-                    ship_visible, x, y);
-
-            dodger_patch_buffer[offset++] = (uint8_t)(color >> 8);
-            dodger_patch_buffer[offset++] = (uint8_t)(color & 0xFFU);
-        }
-    }
+    DodgerRender_FillPatch(
+        width, height, DODGER_BACKGROUND_COLOR);
+    DodgerRender_DrawStarsToPatch(
+        game, rect, width, height);
+    DodgerRender_DrawAsteroidsToPatch(
+        game, rect, width, height);
+    DodgerRender_DrawBulletsToPatch(
+        game, rect, width, height);
+    DodgerRender_DrawShipToPatch(
+        game, rect, width, height);
 
     ILI9341_DrawImage_DMA_1D(
         (uint16_t)rect.x0,
