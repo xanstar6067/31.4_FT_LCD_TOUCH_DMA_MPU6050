@@ -1,5 +1,6 @@
 #include "arcade_collection.h"
 
+#include "balance_tower_render.h"
 #include "gravity_pong_render.h"
 #include "marble_maze_render.h"
 #include "orb_hunt_render.h"
@@ -43,6 +44,9 @@ static void ArcadeCollection_RenderActive(ArcadeCollection *arcade) {
         case ARCADE_PAGE_SPACE_DODGER:
             SpaceDodgerRender_Init(&arcade->space_dodger);
             break;
+        case ARCADE_PAGE_BALANCE_TOWER:
+            BalanceTowerRender_Init(&arcade->balance_tower);
+            break;
         default:
             break;
     }
@@ -64,6 +68,8 @@ void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed) {
                     ArcadeCollection_NextSeed(arcade));
     SpaceDodger_Init(&arcade->space_dodger,
                      ArcadeCollection_NextSeed(arcade));
+    BalanceTower_Init(&arcade->balance_tower,
+                      ArcadeCollection_NextSeed(arcade));
     ArcadeCollection_RenderActive(arcade);
 }
 
@@ -116,6 +122,13 @@ void ArcadeCollection_Update(ArcadeCollection *arcade,
             SpaceDodgerRender_Frame(&arcade->space_dodger, event);
             break;
         }
+        case ARCADE_PAGE_BALANCE_TOWER: {
+            BalanceTowerEvent event =
+                BalanceTower_Update(&arcade->balance_tower,
+                                    mpu_data->gyro_z);
+            BalanceTowerRender_Frame(&arcade->balance_tower, event);
+            break;
+        }
         default:
             break;
     }
@@ -153,6 +166,9 @@ void ArcadeCollection_RestartActive(ArcadeCollection *arcade) {
             break;
         case ARCADE_PAGE_SPACE_DODGER:
             SpaceDodger_Init(&arcade->space_dodger, seed);
+            break;
+        case ARCADE_PAGE_BALANCE_TOWER:
+            BalanceTower_Init(&arcade->balance_tower, seed);
             break;
         default:
             break;
