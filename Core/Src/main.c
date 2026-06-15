@@ -21,20 +21,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "ili9341_config.h"
 #include "ili9341.h"
 #include "ili9341_touch.h"
-#include "fonts.h"
-#include "testimg.h"
-#include "virtual_buttons.h"
-#include "button_renderer.h"
 #include "mpu6050.h"
-#include "game_logic.h"
-#include "game_render.h"
+#include "arcade_collection.h"
+#include "single_button.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,8 +37,6 @@
 /* USER CODE BEGIN PD */
 #define BUTTON_PIN UKEY_Pin
 #define BUTTON_PORT UKEY_GPIO_Port
-#define IMAGE_WIDTH  240
-#define IMAGE_HEIGHT 240
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -65,8 +54,9 @@ TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-GameState game;
-static volatile uint8_t game_tick_pending;
+ArcadeCollection arcade;
+SingleButton ukey_button;
+static volatile uint8_t arcade_tick_pending;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -81,13 +71,14 @@ static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 void init(void);
-static uint32_t Game_CreateSeed(const MPU6050_Data_t *data);
-static void Game_ProcessTick(void);
+static uint32_t Arcade_CreateSeed(const MPU6050_Data_t *data);
+static void Arcade_ProcessTick(void);
+static void Arcade_ProcessButton(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-static uint32_t Game_CreateSeed(const MPU6050_Data_t *data) {
+static uint32_t Arcade_CreateSeed(const MPU6050_Data_t *data) {
     uint32_t seed = HAL_GetTick() * 0x9E3779B9U;
 
     seed ^= ((uint32_t)(uint16_t)data->accel_x << 16);
@@ -99,13 +90,28 @@ static uint32_t Game_CreateSeed(const MPU6050_Data_t *data) {
     return seed;
 }
 
-static void Game_ProcessTick(void) {
+static void Arcade_ProcessTick(void) {
     MPU6050_Data_t mpu_data;
-    GameEvent event;
 
     MPU6050_ReadData(&mpu_data);
-    event = Game_Update(&game, mpu_data.accel_x, mpu_data.accel_y);
-    Render_Frame(&game, event);
+    ArcadeCollection_Update(&arcade,
+                            mpu_data.accel_x,
+                            mpu_data.accel_y);
+}
+
+static void Arcade_ProcessButton(void) {
+    uint8_t pressed =
+        (HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN) == GPIO_PIN_RESET);
+    SingleButtonEvent event =
+        SingleButton_Update(&ukey_button, pressed, HAL_GetTick());
+
+    if (event == SINGLE_BUTTON_EVENT_SHORT_PRESS) {
+        ArcadeCollection_NextGame(&arcade);
+        arcade_tick_pending = 0U;
+    } else if (event == SINGLE_BUTTON_EVENT_LONG_PRESS) {
+        ArcadeCollection_RestartGame(&arcade);
+        arcade_tick_pending = 0U;
+    }
 }
 
 void init(void) {
@@ -114,14 +120,16 @@ void init(void) {
     ILI9341_Unselect();
     ILI9341_TouchUnselect();
     ILI9341_Init();
-    //ILI9341_FillScreen_DMA(ILI9341_BLACK); //просто помни что это бывает нужно (для меня)
     MPU6050_Init();
     MPU6050_ReadData(&seed_data);
 
-    Game_Init(&game, Game_CreateSeed(&seed_data));
-    Render_Init(&game);
+    SingleButton_Init(
+        &ukey_button,
+        (HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN) == GPIO_PIN_RESET),
+        HAL_GetTick());
+    ArcadeCollection_Init(&arcade, Arcade_CreateSeed(&seed_data));
 
-    game_tick_pending = 0U;
+    arcade_tick_pending = 0U;
     MX_TIM2_Init();
     HAL_TIM_Base_Start_IT(&htim2);
 }
@@ -163,16 +171,18 @@ int main(void) {
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1) {
-    if (game_tick_pending != 0U) {
+    Arcade_ProcessButton();
+
+    if (arcade_tick_pending != 0U) {
       uint32_t primask = __get_PRIMASK();
 
       __disable_irq();
-      game_tick_pending = 0U;
+      arcade_tick_pending = 0U;
       if (primask == 0U) {
         __enable_irq();
       }
 
-      Game_ProcessTick();
+      Arcade_ProcessTick();
     }
     /* USER CODE END WHILE */
 
@@ -483,7 +493,7 @@ static void MX_GPIO_Init(void) {
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	/* USER CODE BEGIN Callback 0 */
 	if (htim->Instance == TIM2) {
-		game_tick_pending = 1U;
+		arcade_tick_pending = 1U;
 	}
 	/* USER CODE END Callback 0 */
 

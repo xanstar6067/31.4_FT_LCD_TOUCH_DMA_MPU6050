@@ -1,12 +1,12 @@
-#include "game_render.h"
+#include "orb_hunt_render.h"
 
 #include <stdio.h>
 #include "ili9341.h"
 
 #define RENDER_PATCH_MAX_WIDTH   64
 #define RENDER_PATCH_MAX_HEIGHT  64
-#define RENDER_HUD_HEIGHT        GAME_PLAYFIELD_TOP
-#define RENDER_HUD_LINE_Y        (GAME_PLAYFIELD_TOP - 1)
+#define RENDER_HUD_HEIGHT        ORB_HUNT_PLAYFIELD_TOP
+#define RENDER_HUD_LINE_Y        (ORB_HUNT_PLAYFIELD_TOP - 1)
 
 typedef struct {
     int16_t x0;
@@ -35,7 +35,7 @@ static int16_t Render_Round(float value) {
     return (int16_t)(value + 0.5f);
 }
 
-static uint8_t Render_ActiveMask(const GameState *game) {
+static uint8_t Render_ActiveMask(const OrbHuntState *game) {
     uint8_t mask = 0U;
 
     for (uint8_t i = 0U; i < game->level.target_count; i++) {
@@ -46,7 +46,7 @@ static uint8_t Render_ActiveMask(const GameState *game) {
     return mask;
 }
 
-static uint16_t Render_BackgroundColor(const GameState *game) {
+static uint16_t Render_BackgroundColor(const OrbHuntState *game) {
     uint8_t index = game->level.theme %
                     (sizeof(background_colors) /
                      sizeof(background_colors[0]));
@@ -80,14 +80,14 @@ static void Render_ClipRect(RenderRect *rect) {
     if (rect->x0 < 0) {
         rect->x0 = 0;
     }
-    if (rect->y0 < GAME_PLAYFIELD_TOP) {
-        rect->y0 = GAME_PLAYFIELD_TOP;
+    if (rect->y0 < ORB_HUNT_PLAYFIELD_TOP) {
+        rect->y0 = ORB_HUNT_PLAYFIELD_TOP;
     }
-    if (rect->x1 >= GAME_SCREEN_WIDTH) {
-        rect->x1 = GAME_SCREEN_WIDTH - 1;
+    if (rect->x1 >= ORB_HUNT_SCREEN_WIDTH) {
+        rect->x1 = ORB_HUNT_SCREEN_WIDTH - 1;
     }
-    if (rect->y1 >= GAME_SCREEN_HEIGHT) {
-        rect->y1 = GAME_SCREEN_HEIGHT - 1;
+    if (rect->y1 >= ORB_HUNT_SCREEN_HEIGHT) {
+        rect->y1 = ORB_HUNT_SCREEN_HEIGHT - 1;
     }
 }
 
@@ -101,17 +101,17 @@ static uint8_t Render_PointInCircle(int16_t x,
     return ((dx * dx) + (dy * dy)) <= ((int32_t)radius * radius);
 }
 
-static uint16_t Render_StaticPixel(const GameState *game,
+static uint16_t Render_StaticPixel(const OrbHuntState *game,
                                    int16_t x,
                                    int16_t y) {
     for (uint8_t i = 0U; i < game->level.target_count; i++) {
-        const GameTarget *target = &game->level.targets[i];
+        const OrbHuntTarget *target = &game->level.targets[i];
 
         if (target->active == 0U) {
             continue;
         }
         if (Render_PointInCircle(x, y, target->x, target->y,
-                                 GAME_TARGET_RADIUS) != 0U) {
+                                 ORB_HUNT_TARGET_RADIUS) != 0U) {
             if (Render_PointInCircle(x, y, target->x, target->y, 3) != 0U) {
                 return ILI9341_WHITE;
             }
@@ -121,13 +121,13 @@ static uint16_t Render_StaticPixel(const GameState *game,
     return Render_BackgroundColor(game);
 }
 
-static uint16_t Render_ComposedPixel(const GameState *game,
+static uint16_t Render_ComposedPixel(const OrbHuntState *game,
                                      int16_t ball_x,
                                      int16_t ball_y,
                                      int16_t x,
                                      int16_t y) {
     if (Render_PointInCircle(x, y, ball_x, ball_y,
-                             BALL_RADIUS) != 0U) {
+                             ORB_HUNT_BALL_RADIUS) != 0U) {
         if (Render_PointInCircle(x, y,
                                  ball_x - 5, ball_y - 5, 4) != 0U) {
             return ILI9341_WHITE;
@@ -137,7 +137,7 @@ static uint16_t Render_ComposedPixel(const GameState *game,
     return Render_StaticPixel(game, x, y);
 }
 
-static uint8_t Render_DrawPatch(const GameState *game,
+static uint8_t Render_DrawPatch(const OrbHuntState *game,
                                 int16_t ball_x,
                                 int16_t ball_y,
                                 RenderRect rect) {
@@ -171,44 +171,47 @@ static uint8_t Render_DrawPatch(const GameState *game,
     return 1U;
 }
 
-static void Render_DrawHud(const GameState *game) {
+static void Render_DrawHud(const OrbHuntState *game) {
     char text[20];
 
-    ILI9341_FillRectangle_DMA(0, 0, GAME_SCREEN_WIDTH,
+    ILI9341_FillRectangle_DMA(0, 0, ORB_HUNT_SCREEN_WIDTH,
                               RENDER_HUD_HEIGHT, ILI9341_BLACK);
     ILI9341_FillRectangle_DMA(0, RENDER_HUD_LINE_Y,
-                              GAME_SCREEN_WIDTH, 1, ILI9341_GRAY);
+                              ORB_HUNT_SCREEN_WIDTH, 1, ILI9341_GRAY);
 
-    snprintf(text, sizeof(text), "LEVEL %u",
-             (unsigned int)game->level.number);
-    ILI9341_WriteString_DMA(4, 4, text, Font_11x18,
+    ILI9341_WriteString_DMA(4, 4, "ORB HUNT", Font_11x18,
                             ILI9341_WHITE, ILI9341_BLACK);
 
+    snprintf(text, sizeof(text), "L%u",
+             (unsigned int)game->level.number);
+    ILI9341_WriteString_DMA(108, 4, text, Font_11x18,
+                            ILI9341_CYAN, ILI9341_BLACK);
+
     snprintf(text, sizeof(text), "LEFT %u",
-             (unsigned int)Game_TargetsRemaining(game));
-    ILI9341_WriteString_DMA(210, 4, text, Font_11x18,
+             (unsigned int)OrbHunt_TargetsRemaining(game));
+    ILI9341_WriteString_DMA(232, 4, text, Font_11x18,
                             ILI9341_YELLOW, ILI9341_BLACK);
 }
 
-static void Render_DrawWholeLevel(const GameState *game) {
+static void Render_DrawWholeLevel(const OrbHuntState *game) {
     int16_t ball_x = Render_Round(game->ball.x);
     int16_t ball_y = Render_Round(game->ball.y);
     RenderRect ball_rect = {
-        ball_x - BALL_RADIUS,
-        ball_y - BALL_RADIUS,
-        ball_x + BALL_RADIUS,
-        ball_y + BALL_RADIUS
+        ball_x - ORB_HUNT_BALL_RADIUS,
+        ball_y - ORB_HUNT_BALL_RADIUS,
+        ball_x + ORB_HUNT_BALL_RADIUS,
+        ball_y + ORB_HUNT_BALL_RADIUS
     };
 
     ILI9341_FillScreen_DMA(Render_BackgroundColor(game));
 
     for (uint8_t i = 0U; i < game->level.target_count; i++) {
-        const GameTarget *target = &game->level.targets[i];
+        const OrbHuntTarget *target = &game->level.targets[i];
 
         if (target->active != 0U) {
             ILI9341_FillCircle_DMA((uint16_t)target->x,
                                    (uint16_t)target->y,
-                                   GAME_TARGET_RADIUS,
+                                   ORB_HUNT_TARGET_RADIUS,
                                    ILI9341_YELLOW);
             ILI9341_FillCircle_DMA((uint16_t)target->x,
                                    (uint16_t)target->y,
@@ -226,12 +229,12 @@ static void Render_DrawWholeLevel(const GameState *game) {
     renderer_initialized = 1U;
 }
 
-void Render_Init(const GameState *game) {
+void OrbHuntRender_Init(const OrbHuntState *game) {
     renderer_initialized = 0U;
     Render_DrawWholeLevel(game);
 }
 
-void Render_Frame(const GameState *game, GameEvent event) {
+void OrbHuntRender_Frame(const OrbHuntState *game, OrbHuntEvent event) {
     int16_t ball_x;
     int16_t ball_y;
     uint8_t active_mask;
@@ -239,7 +242,7 @@ void Render_Frame(const GameState *game, GameEvent event) {
     RenderRect dirty;
 
     if ((renderer_initialized == 0U) ||
-        ((event & GAME_EVENT_LEVEL_STARTED) != 0U)) {
+        ((event & ORB_HUNT_EVENT_LEVEL_STARTED) != 0U)) {
         Render_DrawWholeLevel(game);
         return;
     }
@@ -255,18 +258,19 @@ void Render_Frame(const GameState *game, GameEvent event) {
         return;
     }
 
-    dirty.x0 = previous_ball_x - BALL_RADIUS;
-    dirty.y0 = previous_ball_y - BALL_RADIUS;
-    dirty.x1 = previous_ball_x + BALL_RADIUS;
-    dirty.y1 = previous_ball_y + BALL_RADIUS;
-    Render_IncludeCircle(&dirty, ball_x, ball_y, BALL_RADIUS);
+    dirty.x0 = previous_ball_x - ORB_HUNT_BALL_RADIUS;
+    dirty.y0 = previous_ball_y - ORB_HUNT_BALL_RADIUS;
+    dirty.x1 = previous_ball_x + ORB_HUNT_BALL_RADIUS;
+    dirty.y1 = previous_ball_y + ORB_HUNT_BALL_RADIUS;
+    Render_IncludeCircle(&dirty, ball_x, ball_y,
+                         ORB_HUNT_BALL_RADIUS);
 
     for (uint8_t i = 0U; i < game->level.target_count; i++) {
         if ((changed_targets & (uint8_t)(1U << i)) != 0U) {
             Render_IncludeCircle(&dirty,
                                  game->level.targets[i].x,
                                  game->level.targets[i].y,
-                                 GAME_TARGET_RADIUS);
+                                 ORB_HUNT_TARGET_RADIUS);
         }
     }
 
@@ -275,7 +279,7 @@ void Render_Frame(const GameState *game, GameEvent event) {
         return;
     }
 
-    if ((event & GAME_EVENT_TARGET_COLLECTED) != 0U) {
+    if ((event & ORB_HUNT_EVENT_TARGET_COLLECTED) != 0U) {
         Render_DrawHud(game);
     }
 
