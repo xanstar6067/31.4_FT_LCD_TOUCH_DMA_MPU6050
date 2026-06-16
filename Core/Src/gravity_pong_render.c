@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include "ili9341.h"
+#include "render_scratch.h"
 
 #define PONG_RENDER_PATCH_WIDTH      96
 #define PONG_RENDER_PATCH_HEIGHT     32
@@ -15,6 +16,11 @@
 #define PONG_AI_COLOR                ILI9341_ORANGE
 #define PONG_BALL_COLOR              ILI9341_CYAN
 
+#if (PONG_RENDER_PATCH_WIDTH * PONG_RENDER_PATCH_HEIGHT * 2U) > \
+    RENDER_SCRATCH_BUFFER_SIZE
+#error "Render scratch buffer is too small for gravity pong patches"
+#endif
+
 typedef struct {
     int16_t x0;
     int16_t y0;
@@ -22,8 +28,7 @@ typedef struct {
     int16_t y1;
 } PongRenderRect;
 
-static uint8_t pong_patch_buffer[PONG_RENDER_PATCH_WIDTH *
-                                 PONG_RENDER_PATCH_HEIGHT * 2U];
+#define pong_patch_buffer render_scratch_buffer
 static int16_t previous_ball_x;
 static int16_t previous_ball_y;
 static int16_t previous_player_x;

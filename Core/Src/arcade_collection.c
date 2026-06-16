@@ -4,8 +4,12 @@
 #include "gravity_pong_render.h"
 #include "marble_maze_render.h"
 #include "orb_hunt_render.h"
+#include "render_scratch.h"
 #include "space_dodger_render.h"
 #include "tilt_breaker_render.h"
+
+uint8_t render_scratch_buffer[RENDER_SCRATCH_BUFFER_SIZE]
+    __attribute__((aligned(4)));
 
 static uint32_t ArcadeCollection_NextSeed(ArcadeCollection *arcade) {
     uint32_t value = arcade->seed;

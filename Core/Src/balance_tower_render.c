@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include "ili9341.h"
+#include "render_scratch.h"
 
 #define TOWER_RENDER_PATCH_WIDTH       160
 #define TOWER_RENDER_PATCH_HEIGHT      48
@@ -13,6 +14,11 @@
 #define TOWER_PLATFORM_EDGE_COLOR      ILI9341_WHITE
 #define TOWER_BASE_COLOR               ILI9341_COLOR565(45, 75, 82)
 #define TOWER_BLOCK_BORDER_COLOR       ILI9341_COLOR565(235, 225, 190)
+
+#if (TOWER_RENDER_PATCH_WIDTH * TOWER_RENDER_PATCH_HEIGHT * 2U) > \
+    RENDER_SCRATCH_BUFFER_SIZE
+#error "Render scratch buffer is too small for balance tower patches"
+#endif
 
 typedef struct {
     int16_t x0;
@@ -29,8 +35,7 @@ static const uint16_t tower_block_colors[] = {
     ILI9341_YELLOW
 };
 
-static uint8_t tower_patch_buffer[
-    TOWER_RENDER_PATCH_WIDTH * TOWER_RENDER_PATCH_HEIGHT * 2U];
+#define tower_patch_buffer render_scratch_buffer
 static int16_t previous_platform_angle;
 static int16_t previous_block_x[BALANCE_TOWER_MAX_BLOCKS];
 static uint8_t tower_renderer_initialized;

@@ -2,12 +2,18 @@
 
 #include <stdio.h>
 #include "ili9341.h"
+#include "render_scratch.h"
 
 #define MAZE_RENDER_PATCH_SIZE        32
 #define MAZE_WALL_COLOR               ILI9341_COLOR565(95, 150, 180)
 #define MAZE_WALL_HIGHLIGHT           ILI9341_COLOR565(160, 220, 235)
 #define MAZE_BALL_COLOR               ILI9341_ORANGE
 #define MAZE_GOAL_COLOR               ILI9341_GREEN
+
+#if (MAZE_RENDER_PATCH_SIZE * MAZE_RENDER_PATCH_SIZE * 2U) > \
+    RENDER_SCRATCH_BUFFER_SIZE
+#error "Render scratch buffer is too small for marble maze patches"
+#endif
 
 typedef struct {
     int16_t x0;
@@ -24,8 +30,7 @@ static const uint16_t maze_backgrounds[] = {
     ILI9341_COLOR565(5, 7, 24)
 };
 
-static uint8_t maze_patch_buffer[
-    MAZE_RENDER_PATCH_SIZE * MAZE_RENDER_PATCH_SIZE * 2U];
+#define maze_patch_buffer render_scratch_buffer
 static int16_t previous_ball_x;
 static int16_t previous_ball_y;
 static uint8_t maze_renderer_initialized;

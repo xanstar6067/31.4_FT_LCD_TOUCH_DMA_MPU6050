@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include "ili9341.h"
+#include "render_scratch.h"
 
 #define DODGER_RENDER_PATCH_SIZE       48
 #define DODGER_STAR_CELL_WIDTH         32
@@ -18,6 +19,11 @@
 #define DODGER_ASTEROID_COLOR          ILI9341_COLOR565(145, 110, 85)
 #define DODGER_ASTEROID_DAMAGED_COLOR  ILI9341_COLOR565(190, 90, 55)
 #define DODGER_CRATER_COLOR            ILI9341_COLOR565(65, 48, 45)
+
+#if (DODGER_RENDER_PATCH_SIZE * DODGER_RENDER_PATCH_SIZE * 2U) > \
+    RENDER_SCRATCH_BUFFER_SIZE
+#error "Render scratch buffer is too small for space dodger patches"
+#endif
 
 typedef struct {
     int16_t x0;
@@ -39,8 +45,7 @@ typedef struct {
     uint8_t active;
 } DodgerBulletSnapshot;
 
-static uint8_t dodger_patch_buffer[
-    DODGER_RENDER_PATCH_SIZE * DODGER_RENDER_PATCH_SIZE * 2U];
+#define dodger_patch_buffer render_scratch_buffer
 static DodgerAsteroidSnapshot previous_asteroids[
     SPACE_DODGER_MAX_ASTEROIDS];
 static DodgerBulletSnapshot previous_bullets[

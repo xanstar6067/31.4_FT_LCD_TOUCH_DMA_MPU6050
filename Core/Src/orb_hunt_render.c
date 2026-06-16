@@ -2,11 +2,17 @@
 
 #include <stdio.h>
 #include "ili9341.h"
+#include "render_scratch.h"
 
 #define RENDER_PATCH_MAX_WIDTH   64
 #define RENDER_PATCH_MAX_HEIGHT  64
 #define RENDER_HUD_HEIGHT        ORB_HUNT_PLAYFIELD_TOP
 #define RENDER_HUD_LINE_Y        (ORB_HUNT_PLAYFIELD_TOP - 1)
+
+#if (RENDER_PATCH_MAX_WIDTH * RENDER_PATCH_MAX_HEIGHT * 2U) > \
+    RENDER_SCRATCH_BUFFER_SIZE
+#error "Render scratch buffer is too small for orb hunt patches"
+#endif
 
 typedef struct {
     int16_t x0;
@@ -24,8 +30,7 @@ static const uint16_t background_colors[] = {
     ILI9341_COLOR565(22, 5, 12)
 };
 
-static uint8_t patch_buffer[RENDER_PATCH_MAX_WIDTH *
-                            RENDER_PATCH_MAX_HEIGHT * 2U];
+#define patch_buffer render_scratch_buffer
 static int16_t previous_ball_x;
 static int16_t previous_ball_y;
 static uint8_t previous_active_mask;
