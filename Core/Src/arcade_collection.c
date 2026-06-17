@@ -3,6 +3,7 @@
 #include "balance_tower_render.h"
 #include "biplane_duel_render.h"
 #include "gravity_pong_render.h"
+#include "life_game_render.h"
 #include "marble_maze_render.h"
 #include "orb_hunt_render.h"
 #include "render_scratch.h"
@@ -59,6 +60,9 @@ static void ArcadeCollection_RenderActive(ArcadeCollection *arcade) {
         case ARCADE_PAGE_BIPLANE_DUEL:
             BiplaneDuelRender_Init(&arcade->biplane_duel);
             break;
+        case ARCADE_PAGE_LIFE_GAME:
+            LifeGameRender_Init(&arcade->life_game);
+            break;
         default:
             break;
     }
@@ -86,6 +90,8 @@ void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed) {
                      ArcadeCollection_NextSeed(arcade));
     BiplaneDuel_Init(&arcade->biplane_duel,
                      ArcadeCollection_NextSeed(arcade));
+    LifeGame_Init(&arcade->life_game,
+                  ArcadeCollection_NextSeed(arcade));
     ArcadeCollection_RenderActive(arcade);
 }
 
@@ -160,6 +166,14 @@ void ArcadeCollection_Update(ArcadeCollection *arcade,
             BiplaneDuelRender_Frame(&arcade->biplane_duel, event);
             break;
         }
+        case ARCADE_PAGE_LIFE_GAME: {
+            LifeGameEvent event =
+                LifeGame_Update(&arcade->life_game,
+                                mpu_data,
+                                mpu_status);
+            LifeGameRender_Frame(&arcade->life_game, event);
+            break;
+        }
         default:
             break;
     }
@@ -206,6 +220,9 @@ void ArcadeCollection_RestartActive(ArcadeCollection *arcade) {
             break;
         case ARCADE_PAGE_BIPLANE_DUEL:
             BiplaneDuel_Init(&arcade->biplane_duel, seed);
+            break;
+        case ARCADE_PAGE_LIFE_GAME:
+            LifeGame_Init(&arcade->life_game, seed);
             break;
         default:
             break;
