@@ -7,6 +7,7 @@
 #include "gravity_pong_logic.h"
 #include "life_game_logic.h"
 #include "marble_maze_logic.h"
+#include "micro_colony_logic.h"
 #include "mpu6050_page.h"
 #include "orb_hunt_logic.h"
 #include "shake_flight_logic.h"
@@ -26,6 +27,7 @@ typedef enum {
     ARCADE_PAGE_SHAKE_FLIGHT,
     ARCADE_PAGE_BIPLANE_DUEL,
     ARCADE_PAGE_LIFE_GAME,
+    ARCADE_PAGE_MICRO_COLONY,
     ARCADE_PAGE_COUNT
 } ArcadePageId;
 
@@ -43,6 +45,7 @@ typedef struct {
     ShakeFlightState shake_flight;
     BiplaneDuelState biplane_duel;
     LifeGameState life_game;
+    MicroColonyState micro_colony;
 } ArcadeCollection;
 
 void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed);

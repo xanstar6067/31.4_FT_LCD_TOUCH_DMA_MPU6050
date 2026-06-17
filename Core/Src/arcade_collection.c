@@ -5,6 +5,7 @@
 #include "gravity_pong_render.h"
 #include "life_game_render.h"
 #include "marble_maze_render.h"
+#include "micro_colony_render.h"
 #include "orb_hunt_render.h"
 #include "render_scratch.h"
 #include "shake_flight_render.h"
@@ -63,6 +64,9 @@ static void ArcadeCollection_RenderActive(ArcadeCollection *arcade) {
         case ARCADE_PAGE_LIFE_GAME:
             LifeGameRender_Init(&arcade->life_game);
             break;
+        case ARCADE_PAGE_MICRO_COLONY:
+            MicroColonyRender_Init(&arcade->micro_colony);
+            break;
         default:
             break;
     }
@@ -92,6 +96,8 @@ void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed) {
                      ArcadeCollection_NextSeed(arcade));
     LifeGame_Init(&arcade->life_game,
                   ArcadeCollection_NextSeed(arcade));
+    MicroColony_Init(&arcade->micro_colony,
+                     ArcadeCollection_NextSeed(arcade));
     ArcadeCollection_RenderActive(arcade);
 }
 
@@ -174,6 +180,15 @@ void ArcadeCollection_Update(ArcadeCollection *arcade,
             LifeGameRender_Frame(&arcade->life_game, event);
             break;
         }
+        case ARCADE_PAGE_MICRO_COLONY: {
+            MicroColonyEvent event =
+                MicroColony_Update(&arcade->micro_colony,
+                                   mpu_data,
+                                   mpu_status);
+            MicroColonyRender_Frame(&arcade->micro_colony,
+                                    event);
+            break;
+        }
         default:
             break;
     }
@@ -223,6 +238,9 @@ void ArcadeCollection_RestartActive(ArcadeCollection *arcade) {
             break;
         case ARCADE_PAGE_LIFE_GAME:
             LifeGame_Init(&arcade->life_game, seed);
+            break;
+        case ARCADE_PAGE_MICRO_COLONY:
+            MicroColony_Init(&arcade->micro_colony, seed);
             break;
         default:
             break;
