@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "balance_tower_logic.h"
+#include "biplane_duel_logic.h"
 #include "gravity_pong_logic.h"
 #include "marble_maze_logic.h"
 #include "mpu6050_page.h"
@@ -22,6 +23,7 @@ typedef enum {
     ARCADE_PAGE_SPACE_DODGER,
     ARCADE_PAGE_BALANCE_TOWER,
     ARCADE_PAGE_SHAKE_FLIGHT,
+    ARCADE_PAGE_BIPLANE_DUEL,
     ARCADE_PAGE_COUNT
 } ArcadePageId;
 
@@ -37,6 +39,7 @@ typedef struct {
     SpaceDodgerState space_dodger;
     BalanceTowerState balance_tower;
     ShakeFlightState shake_flight;
+    BiplaneDuelState biplane_duel;
 } ArcadeCollection;
 
 void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed);

@@ -1,6 +1,7 @@
 #include "arcade_collection.h"
 
 #include "balance_tower_render.h"
+#include "biplane_duel_render.h"
 #include "gravity_pong_render.h"
 #include "marble_maze_render.h"
 #include "orb_hunt_render.h"
@@ -55,6 +56,9 @@ static void ArcadeCollection_RenderActive(ArcadeCollection *arcade) {
         case ARCADE_PAGE_SHAKE_FLIGHT:
             ShakeFlightRender_Init(&arcade->shake_flight);
             break;
+        case ARCADE_PAGE_BIPLANE_DUEL:
+            BiplaneDuelRender_Init(&arcade->biplane_duel);
+            break;
         default:
             break;
     }
@@ -79,6 +83,8 @@ void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed) {
     BalanceTower_Init(&arcade->balance_tower,
                       ArcadeCollection_NextSeed(arcade));
     ShakeFlight_Init(&arcade->shake_flight,
+                     ArcadeCollection_NextSeed(arcade));
+    BiplaneDuel_Init(&arcade->biplane_duel,
                      ArcadeCollection_NextSeed(arcade));
     ArcadeCollection_RenderActive(arcade);
 }
@@ -146,6 +152,14 @@ void ArcadeCollection_Update(ArcadeCollection *arcade,
             ShakeFlightRender_Frame(&arcade->shake_flight, event);
             break;
         }
+        case ARCADE_PAGE_BIPLANE_DUEL: {
+            BiplaneDuelEvent event =
+                BiplaneDuel_Update(&arcade->biplane_duel,
+                                   mpu_data->accel_x,
+                                   mpu_data->accel_y);
+            BiplaneDuelRender_Frame(&arcade->biplane_duel, event);
+            break;
+        }
         default:
             break;
     }
@@ -189,6 +203,9 @@ void ArcadeCollection_RestartActive(ArcadeCollection *arcade) {
             break;
         case ARCADE_PAGE_SHAKE_FLIGHT:
             ShakeFlight_Init(&arcade->shake_flight, seed);
+            break;
+        case ARCADE_PAGE_BIPLANE_DUEL:
+            BiplaneDuel_Init(&arcade->biplane_duel, seed);
             break;
         default:
             break;
