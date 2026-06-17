@@ -5,6 +5,7 @@
 #include "marble_maze_render.h"
 #include "orb_hunt_render.h"
 #include "render_scratch.h"
+#include "shake_flight_render.h"
 #include "space_dodger_render.h"
 #include "tilt_breaker_render.h"
 
@@ -51,6 +52,9 @@ static void ArcadeCollection_RenderActive(ArcadeCollection *arcade) {
         case ARCADE_PAGE_BALANCE_TOWER:
             BalanceTowerRender_Init(&arcade->balance_tower);
             break;
+        case ARCADE_PAGE_SHAKE_FLIGHT:
+            ShakeFlightRender_Init(&arcade->shake_flight);
+            break;
         default:
             break;
     }
@@ -74,6 +78,8 @@ void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed) {
                      ArcadeCollection_NextSeed(arcade));
     BalanceTower_Init(&arcade->balance_tower,
                       ArcadeCollection_NextSeed(arcade));
+    ShakeFlight_Init(&arcade->shake_flight,
+                     ArcadeCollection_NextSeed(arcade));
     ArcadeCollection_RenderActive(arcade);
 }
 
@@ -133,6 +139,13 @@ void ArcadeCollection_Update(ArcadeCollection *arcade,
             BalanceTowerRender_Frame(&arcade->balance_tower, event);
             break;
         }
+        case ARCADE_PAGE_SHAKE_FLIGHT: {
+            ShakeFlightEvent event =
+                ShakeFlight_Update(&arcade->shake_flight,
+                                   mpu_data->accel_z);
+            ShakeFlightRender_Frame(&arcade->shake_flight, event);
+            break;
+        }
         default:
             break;
     }
@@ -173,6 +186,9 @@ void ArcadeCollection_RestartActive(ArcadeCollection *arcade) {
             break;
         case ARCADE_PAGE_BALANCE_TOWER:
             BalanceTower_Init(&arcade->balance_tower, seed);
+            break;
+        case ARCADE_PAGE_SHAKE_FLIGHT:
+            ShakeFlight_Init(&arcade->shake_flight, seed);
             break;
         default:
             break;
