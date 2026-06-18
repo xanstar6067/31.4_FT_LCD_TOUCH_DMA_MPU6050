@@ -72,7 +72,7 @@ static void LifeGame_MarkDirty(LifeGameState *game,
 
 static void LifeGame_MixSensorSeed(
     LifeGameState *game,
-    const MPU6050_Data_t *mpu_data) {
+    const MPU6000_Data_t *mpu_data) {
     uint32_t value = game->seed_accumulator;
 
     value ^= HAL_GetTick() + 0x9E3779B9U + (value << 6) +
@@ -92,7 +92,7 @@ static void LifeGame_MixSensorSeed(
 
 static uint8_t LifeGame_UpdateShake(
     LifeGameState *game,
-    const MPU6050_Data_t *mpu_data,
+    const MPU6000_Data_t *mpu_data,
     HAL_StatusTypeDef mpu_status) {
     uint32_t raw_energy;
     uint32_t gyro_motion;
@@ -251,7 +251,7 @@ void LifeGame_Init(LifeGameState *game, uint32_t seed) {
 }
 
 LifeGameEvent LifeGame_Update(LifeGameState *game,
-                              const MPU6050_Data_t *mpu_data,
+                              const MPU6000_Data_t *mpu_data,
                               HAL_StatusTypeDef mpu_status) {
     LifeGameEvent event = LIFE_GAME_EVENT_NONE;
 

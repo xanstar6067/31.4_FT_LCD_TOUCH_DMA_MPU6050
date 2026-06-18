@@ -1,4 +1,4 @@
-#include "mpu6050_page.h"
+#include "mpu6000_page.h"
 
 #include <limits.h>
 #include <stdio.h>
@@ -23,7 +23,7 @@ static uint8_t bubble_buffer[MPU_PAGE_BUBBLE_SIZE *
 static uint8_t bar_buffer[MPU_PAGE_BAR_WIDTH *
                           MPU_PAGE_BAR_HEIGHT * 2U];
 
-static int16_t MPU6050Page_Clamp(int32_t value,
+static int16_t MPU6000Page_Clamp(int32_t value,
                                  int16_t minimum,
                                  int16_t maximum) {
     if (value < minimum) {
@@ -35,17 +35,17 @@ static int16_t MPU6050Page_Clamp(int32_t value,
     return (int16_t)value;
 }
 
-static int16_t MPU6050Page_Scale(int16_t value,
+static int16_t MPU6000Page_Scale(int16_t value,
                                  int16_t input_limit,
                                  int16_t output_limit) {
     int32_t scaled = ((int32_t)value * output_limit) / input_limit;
 
-    return MPU6050Page_Clamp(scaled,
+    return MPU6000Page_Clamp(scaled,
                              (int16_t)-output_limit,
                              output_limit);
 }
 
-static uint16_t MPU6050Page_TiltStaticPixel(int16_t x, int16_t y) {
+static uint16_t MPU6000Page_TiltStaticPixel(int16_t x, int16_t y) {
     if (((x >= 78) && (x <= 79) && (y >= 76) && (y < 190)) ||
         ((y >= 131) && (y <= 132) && (x >= 14) && (x < 144)) ||
         ((x == 48) && (y >= 80) && (y < 186)) ||
@@ -57,7 +57,7 @@ static uint16_t MPU6050Page_TiltStaticPixel(int16_t x, int16_t y) {
     return MPU_PAGE_PANEL;
 }
 
-static void MPU6050Page_DrawBubblePatch(int16_t center_x,
+static void MPU6000Page_DrawBubblePatch(int16_t center_x,
                                         int16_t center_y,
                                         uint8_t draw_bubble,
                                         uint16_t bubble_color) {
@@ -72,7 +72,7 @@ static void MPU6050Page_DrawBubblePatch(int16_t center_x,
             int16_t dx = x - MPU_PAGE_BUBBLE_RADIUS;
             int16_t dy = y - MPU_PAGE_BUBBLE_RADIUS;
             uint16_t color =
-                MPU6050Page_TiltStaticPixel(absolute_x, absolute_y);
+                MPU6000Page_TiltStaticPixel(absolute_x, absolute_y);
 
             if ((draw_bubble != 0U) &&
                 (((dx * dx) + (dy * dy)) <=
@@ -97,11 +97,11 @@ static void MPU6050Page_DrawBubblePatch(int16_t center_x,
                              bubble_buffer);
 }
 
-static void MPU6050Page_UpdateBubble(MPU6050Page *page) {
+static void MPU6000Page_UpdateBubble(MPU6000Page *page) {
     int16_t bubble_x =
-        79 + MPU6050Page_Scale(page->data.accel_x, 16384, 55);
+        79 + MPU6000Page_Scale(page->data.accel_x, 16384, 55);
     int16_t bubble_y =
-        132 + MPU6050Page_Scale(page->data.accel_y, 16384, 48);
+        132 + MPU6000Page_Scale(page->data.accel_y, 16384, 48);
     uint8_t color_changed =
         page->displayed_online != page->online;
 
@@ -112,12 +112,12 @@ static void MPU6050Page_UpdateBubble(MPU6050Page *page) {
     }
 
     if (page->previous_bubble_x != INT16_MIN) {
-        MPU6050Page_DrawBubblePatch(page->previous_bubble_x,
+        MPU6000Page_DrawBubblePatch(page->previous_bubble_x,
                                     page->previous_bubble_y,
                                     0U,
                                     MPU_PAGE_PANEL);
     }
-    MPU6050Page_DrawBubblePatch(
+    MPU6000Page_DrawBubblePatch(
         bubble_x,
         bubble_y,
         1U,
@@ -126,7 +126,7 @@ static void MPU6050Page_UpdateBubble(MPU6050Page *page) {
     page->previous_bubble_y = bubble_y;
 }
 
-static void MPU6050Page_DrawBar(uint16_t x,
+static void MPU6000Page_DrawBar(uint16_t x,
                                 uint16_t y,
                                 int16_t amount,
                                 uint16_t color) {
@@ -162,7 +162,7 @@ static void MPU6050Page_DrawBar(uint16_t x,
                              bar_buffer);
 }
 
-static void MPU6050Page_UpdateBars(MPU6050Page *page) {
+static void MPU6000Page_UpdateBars(MPU6000Page *page) {
     const int16_t values[6] = {
         page->data.accel_x,
         page->data.accel_y,
@@ -178,13 +178,13 @@ static void MPU6050Page_UpdateBars(MPU6050Page *page) {
     for (uint8_t index = 0U; index < 6U; index++) {
         int16_t limit = (index < 3U) ? 16384 : 8000;
         int16_t amount =
-            MPU6050Page_Scale(values[index], limit,
+            MPU6000Page_Scale(values[index], limit,
                               MPU_PAGE_BAR_WIDTH / 2);
 
         if (amount == page->previous_bars[index]) {
             continue;
         }
-        MPU6050Page_DrawBar(
+        MPU6000Page_DrawBar(
             225U,
             positions_y[index],
             amount,
@@ -194,7 +194,7 @@ static void MPU6050Page_UpdateBars(MPU6050Page *page) {
     }
 }
 
-static void MPU6050Page_DrawRawValue(uint16_t y,
+static void MPU6000Page_DrawRawValue(uint16_t y,
                                      char axis,
                                      int16_t value) {
     char text[12];
@@ -204,7 +204,7 @@ static void MPU6050Page_DrawRawValue(uint16_t y,
                             ILI9341_WHITE, MPU_PAGE_PANEL);
 }
 
-static void MPU6050Page_UpdateText(MPU6050Page *page,
+static void MPU6000Page_UpdateText(MPU6000Page *page,
                                    uint8_t force) {
     if ((force == 0U) &&
         (page->text_divider < MPU_PAGE_TEXT_TICKS)) {
@@ -214,32 +214,32 @@ static void MPU6050Page_UpdateText(MPU6050Page *page,
 
     if ((force != 0U) ||
         (page->displayed_data.accel_x != page->data.accel_x)) {
-        MPU6050Page_DrawRawValue(88U, 'X', page->data.accel_x);
+        MPU6000Page_DrawRawValue(88U, 'X', page->data.accel_x);
     }
     if ((force != 0U) ||
         (page->displayed_data.accel_y != page->data.accel_y)) {
-        MPU6050Page_DrawRawValue(103U, 'Y', page->data.accel_y);
+        MPU6000Page_DrawRawValue(103U, 'Y', page->data.accel_y);
     }
     if ((force != 0U) ||
         (page->displayed_data.accel_z != page->data.accel_z)) {
-        MPU6050Page_DrawRawValue(118U, 'Z', page->data.accel_z);
+        MPU6000Page_DrawRawValue(118U, 'Z', page->data.accel_z);
     }
     if ((force != 0U) ||
         (page->displayed_data.gyro_x != page->data.gyro_x)) {
-        MPU6050Page_DrawRawValue(153U, 'X', page->data.gyro_x);
+        MPU6000Page_DrawRawValue(153U, 'X', page->data.gyro_x);
     }
     if ((force != 0U) ||
         (page->displayed_data.gyro_y != page->data.gyro_y)) {
-        MPU6050Page_DrawRawValue(168U, 'Y', page->data.gyro_y);
+        MPU6000Page_DrawRawValue(168U, 'Y', page->data.gyro_y);
     }
     if ((force != 0U) ||
         (page->displayed_data.gyro_z != page->data.gyro_z)) {
-        MPU6050Page_DrawRawValue(183U, 'Z', page->data.gyro_z);
+        MPU6000Page_DrawRawValue(183U, 'Z', page->data.gyro_z);
     }
     page->displayed_data = page->data;
 }
 
-static void MPU6050Page_UpdateStatus(MPU6050Page *page,
+static void MPU6000Page_UpdateStatus(MPU6000Page *page,
                                      uint8_t force) {
     char text[48];
     uint16_t color = page->online ? ILI9341_GREEN : ILI9341_RED;
@@ -253,8 +253,9 @@ static void MPU6050Page_UpdateStatus(MPU6050Page *page,
 
     ILI9341_FillRectangle_DMA(8, 44, 304, 20, MPU_PAGE_PANEL);
     snprintf(text, sizeof(text),
-             "%s  WHO:%02X  I2C:100K  ERR:%lu",
-             page->online ? "ONLINE " : "OFFLINE",
+             "%s %s WHO:%02X ERR:%lu",
+             page->online ? "ONLINE" : "OFFLINE",
+             MPU6000_GetDeviceNameFromWhoAmI(page->who_am_i),
              page->who_am_i,
              (unsigned long)page->read_errors);
     ILI9341_WriteString_DMA(13, 49, text, Font_7x10,
@@ -263,11 +264,11 @@ static void MPU6050Page_UpdateStatus(MPU6050Page *page,
     page->displayed_errors = page->read_errors;
 }
 
-static void MPU6050Page_UpdateFooter(MPU6050Page *page,
+static void MPU6000Page_UpdateFooter(MPU6000Page *page,
                                      uint8_t force) {
     char text[40];
     int32_t temperature_centi =
-        3653 + ((int32_t)page->data.temperature * 100) / 340;
+        MPU6000_TemperatureCenti(&page->data);
 
     if ((force == 0U) &&
         (page->footer_divider < MPU_PAGE_FOOTER_TICKS)) {
@@ -304,11 +305,11 @@ static void MPU6050Page_UpdateFooter(MPU6050Page *page,
     page->displayed_reads = page->successful_reads;
 }
 
-static void MPU6050Page_DrawStatic(void) {
+static void MPU6000Page_DrawStatic(void) {
     ILI9341_FillScreen_DMA(MPU_PAGE_BACKGROUND);
     ILI9341_FillRectangle_DMA(0, 0, 320, 38,
                               ILI9341_DARK_BLUE);
-    ILI9341_WriteString_DMA(8, 6, "MPU6050 MONITOR",
+    ILI9341_WriteString_DMA(8, 6, "MPU6000 MONITOR",
                             Font_16x26,
                             ILI9341_WHITE,
                             ILI9341_DARK_BLUE);
@@ -336,10 +337,10 @@ static void MPU6050Page_DrawStatic(void) {
         Font_7x10, ILI9341_WHITE, MPU_PAGE_BACKGROUND);
 }
 
-void MPU6050Page_Init(MPU6050Page *page) {
+void MPU6000Page_Init(MPU6000Page *page) {
     memset(page, 0, sizeof(*page));
-    page->who_am_i = MPU6050_Check();
-    page->online = (page->who_am_i == 0x68U);
+    page->who_am_i = MPU6000_Check();
+    page->online = MPU6000_IsKnownWhoAmI(page->who_am_i);
     page->previous_bubble_x = INT16_MIN;
     page->previous_bubble_y = INT16_MIN;
     page->displayed_temperature = INT16_MIN;
@@ -352,8 +353,8 @@ void MPU6050Page_Init(MPU6050Page *page) {
     page->displayed_reads = UINT32_MAX;
 }
 
-void MPU6050Page_Update(MPU6050Page *page,
-                        const MPU6050_Data_t *data,
+void MPU6000Page_Update(MPU6000Page *page,
+                        const MPU6000_Data_t *data,
                         HAL_StatusTypeDef read_status) {
     if (read_status == HAL_OK) {
         page->data = *data;
@@ -367,22 +368,22 @@ void MPU6050Page_Update(MPU6050Page *page,
     page->identity_divider++;
     if (page->identity_divider >= MPU_PAGE_IDENTITY_TICKS) {
         page->identity_divider = 0U;
-        page->who_am_i = MPU6050_Check();
+        page->who_am_i = MPU6000_Check();
         page->online =
-            (page->who_am_i == 0x68U) &&
+            (MPU6000_IsKnownWhoAmI(page->who_am_i) != 0U) &&
             (read_status == HAL_OK);
     }
 
     page->text_divider++;
     page->footer_divider++;
-    MPU6050Page_Render(page);
+    MPU6000Page_Render(page);
 }
 
-void MPU6050Page_Render(MPU6050Page *page) {
+void MPU6000Page_Render(MPU6000Page *page) {
     uint8_t force = 0U;
 
     if (page->renderer_initialized == 0U) {
-        MPU6050Page_DrawStatic();
+        MPU6000Page_DrawStatic();
         page->previous_bubble_x = INT16_MIN;
         page->previous_bubble_y = INT16_MIN;
         for (uint8_t index = 0U; index < 6U; index++) {
@@ -397,10 +398,11 @@ void MPU6050Page_Render(MPU6050Page *page) {
         force = 1U;
     }
 
-    MPU6050Page_UpdateBubble(page);
-    MPU6050Page_UpdateBars(page);
-    MPU6050Page_UpdateText(page, force);
-    MPU6050Page_UpdateStatus(page, force);
-    MPU6050Page_UpdateFooter(page, force);
+    MPU6000Page_UpdateBubble(page);
+    MPU6000Page_UpdateBars(page);
+    MPU6000Page_UpdateText(page, force);
+    MPU6000Page_UpdateStatus(page, force);
+    MPU6000Page_UpdateFooter(page, force);
     page->displayed_online = page->online;
 }
+

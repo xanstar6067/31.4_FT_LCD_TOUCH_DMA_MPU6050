@@ -111,7 +111,7 @@ static void LifeGameRender_DrawWaitMeter(
             ILI9341_WHITE, LIFE_RENDER_BACKGROUND);
     } else {
         ILI9341_WriteString_DMA(
-            96, 176, "MPU6050 OFFLINE",
+            96, 176, "MPU6000 OFFLINE",
             Font_7x10, ILI9341_RED,
             LIFE_RENDER_BACKGROUND);
     }
@@ -129,7 +129,7 @@ static void LifeGameRender_DrawWaitScreen(
     ILI9341_FillRectangle_DMA(24, 52, 272, 116,
                               LIFE_RENDER_PANEL);
     ILI9341_WriteString_DMA(
-        47, 72, "SHAKE MPU6050", Font_16x26,
+        47, 72, "SHAKE MPU6000", Font_16x26,
         ILI9341_WHITE, LIFE_RENDER_PANEL);
     ILI9341_WriteString_DMA(
         62, 105, "TO SEED THE CELLS", Font_11x18,

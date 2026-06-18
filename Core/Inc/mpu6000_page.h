@@ -1,12 +1,12 @@
-#ifndef INC_MPU6050_PAGE_H_
-#define INC_MPU6050_PAGE_H_
+#ifndef INC_MPU6000_PAGE_H_
+#define INC_MPU6000_PAGE_H_
 
 #include <stdint.h>
-#include "mpu6050.h"
+#include "mpu6000.h"
 
 typedef struct {
-    MPU6050_Data_t data;
-    MPU6050_Data_t displayed_data;
+    MPU6000_Data_t data;
+    MPU6000_Data_t displayed_data;
     uint32_t successful_reads;
     uint32_t read_errors;
     uint32_t displayed_reads;
@@ -23,12 +23,12 @@ typedef struct {
     uint8_t footer_divider;
     uint8_t identity_divider;
     uint8_t renderer_initialized;
-} MPU6050Page;
+} MPU6000Page;
 
-void MPU6050Page_Init(MPU6050Page *page);
-void MPU6050Page_Update(MPU6050Page *page,
-                        const MPU6050_Data_t *data,
+void MPU6000Page_Init(MPU6000Page *page);
+void MPU6000Page_Update(MPU6000Page *page,
+                        const MPU6000_Data_t *data,
                         HAL_StatusTypeDef read_status);
-void MPU6050Page_Render(MPU6050Page *page);
+void MPU6000Page_Render(MPU6000Page *page);
 
-#endif /* INC_MPU6050_PAGE_H_ */
+#endif /* INC_MPU6000_PAGE_H_ */

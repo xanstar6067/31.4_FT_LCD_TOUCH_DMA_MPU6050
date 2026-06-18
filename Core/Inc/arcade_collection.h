@@ -8,7 +8,7 @@
 #include "life_game_logic.h"
 #include "marble_maze_logic.h"
 #include "micro_colony_logic.h"
-#include "mpu6050_page.h"
+#include "mpu6000_page.h"
 #include "orb_hunt_logic.h"
 #include "shake_flight_logic.h"
 #include "space_dodger_logic.h"
@@ -17,7 +17,7 @@
 
 typedef enum {
     ARCADE_PAGE_SYSTEM_INFO = 0,
-    ARCADE_PAGE_MPU6050,
+    ARCADE_PAGE_MPU6000,
     ARCADE_PAGE_ORB_HUNT,
     ARCADE_PAGE_GRAVITY_PONG,
     ARCADE_PAGE_TILT_BREAKER,
@@ -35,7 +35,7 @@ typedef struct {
     ArcadePageId active_page;
     uint32_t seed;
     SystemInfoPage system_info;
-    MPU6050Page mpu6050;
+    MPU6000Page mpu6000;
     OrbHuntState orb_hunt;
     GravityPongState gravity_pong;
     TiltBreakerState tilt_breaker;
@@ -50,7 +50,7 @@ typedef struct {
 
 void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed);
 void ArcadeCollection_Update(ArcadeCollection *arcade,
-                             const MPU6050_Data_t *mpu_data,
+                             const MPU6000_Data_t *mpu_data,
                              HAL_StatusTypeDef mpu_status);
 void ArcadeCollection_NextPage(ArcadeCollection *arcade);
 void ArcadeCollection_RestartActive(ArcadeCollection *arcade);

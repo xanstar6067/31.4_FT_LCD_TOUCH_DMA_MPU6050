@@ -23,7 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include "ili9341.h"
 #include "ili9341_touch.h"
-#include "mpu6050.h"
+#include "mpu6000.h"
 #include "arcade_collection.h"
 #include "single_button.h"
 #include "w25qxx.h"
@@ -72,14 +72,14 @@ static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 void init(void);
-static uint32_t Arcade_CreateSeed(const MPU6050_Data_t *data);
+static uint32_t Arcade_CreateSeed(const MPU6000_Data_t *data);
 static void Arcade_ProcessTick(void);
 static void Arcade_ProcessButton(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-static uint32_t Arcade_CreateSeed(const MPU6050_Data_t *data) {
+static uint32_t Arcade_CreateSeed(const MPU6000_Data_t *data) {
     uint32_t seed = HAL_GetTick() * 0x9E3779B9U;
 
     seed ^= ((uint32_t)(uint16_t)data->accel_x << 16);
@@ -92,10 +92,10 @@ static uint32_t Arcade_CreateSeed(const MPU6050_Data_t *data) {
 }
 
 static void Arcade_ProcessTick(void) {
-    MPU6050_Data_t mpu_data;
+    MPU6000_Data_t mpu_data;
     HAL_StatusTypeDef mpu_status;
 
-    mpu_status = MPU6050_ReadData(&mpu_data);
+    mpu_status = MPU6000_ReadData(&mpu_data);
     ArcadeCollection_Update(&arcade,
                             &mpu_data,
                             mpu_status);
@@ -117,14 +117,14 @@ static void Arcade_ProcessButton(void) {
 }
 
 void init(void) {
-    MPU6050_Data_t seed_data;
+    MPU6000_Data_t seed_data;
 
     ILI9341_Unselect();
     ILI9341_TouchUnselect();
     W25Qxx_Unselect();
     ILI9341_Init();
-    MPU6050_Init();
-    MPU6050_ReadData(&seed_data);
+    MPU6000_Init();
+    MPU6000_ReadData(&seed_data);
 
     SingleButton_Init(
         &ukey_button,

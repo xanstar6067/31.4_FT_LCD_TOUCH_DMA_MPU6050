@@ -2,7 +2,7 @@
 #define INC_LIFE_GAME_LOGIC_H_
 
 #include <stdint.h>
-#include "mpu6050.h"
+#include "mpu6000.h"
 
 #define LIFE_GAME_SCREEN_WIDTH          320
 #define LIFE_GAME_SCREEN_HEIGHT         240
@@ -52,7 +52,7 @@ typedef uint8_t LifeGameEvent;
 
 void LifeGame_Init(LifeGameState *game, uint32_t seed);
 LifeGameEvent LifeGame_Update(LifeGameState *game,
-                              const MPU6050_Data_t *mpu_data,
+                              const MPU6000_Data_t *mpu_data,
                               HAL_StatusTypeDef mpu_status);
 uint8_t LifeGame_CellAlive(const LifeGameState *game,
                            uint16_t column,

@@ -2,7 +2,7 @@
 #define INC_MICRO_COLONY_LOGIC_H_
 
 #include <stdint.h>
-#include "mpu6050.h"
+#include "mpu6000.h"
 
 #define MICRO_COLONY_SCREEN_WIDTH       320
 #define MICRO_COLONY_SCREEN_HEIGHT      240
@@ -70,7 +70,7 @@ typedef uint8_t MicroColonyEvent;
 
 void MicroColony_Init(MicroColonyState *game, uint32_t seed);
 MicroColonyEvent MicroColony_Update(MicroColonyState *game,
-                                    const MPU6050_Data_t *mpu_data,
+                                    const MPU6000_Data_t *mpu_data,
                                     HAL_StatusTypeDef mpu_status);
 uint8_t MicroColony_FoodAt(const MicroColonyState *game,
                            uint8_t column,

@@ -41,7 +41,7 @@ static uint32_t MicroColony_Random(MicroColonyState *game) {
 
 static void MicroColony_MixSensor(
     MicroColonyState *game,
-    const MPU6050_Data_t *mpu_data,
+    const MPU6000_Data_t *mpu_data,
     HAL_StatusTypeDef mpu_status) {
     uint32_t value;
 
@@ -741,7 +741,7 @@ void MicroColony_Init(MicroColonyState *game, uint32_t seed) {
 }
 
 MicroColonyEvent MicroColony_Update(MicroColonyState *game,
-                                    const MPU6050_Data_t *mpu_data,
+                                    const MPU6000_Data_t *mpu_data,
                                     HAL_StatusTypeDef mpu_status) {
     MicroColonyEvent event =
         MICRO_COLONY_EVENT_CELLS;
