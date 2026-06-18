@@ -37,6 +37,10 @@ static void ArcadeCollection_RenderActive(ArcadeCollection *arcade) {
             arcade->mpu6000.renderer_initialized = 0U;
             MPU6000Page_Render(&arcade->mpu6000);
             break;
+        case ARCADE_PAGE_TOUCH_TEST:
+            arcade->touch_test.renderer_initialized = 0U;
+            TouchTestPage_Render(&arcade->touch_test);
+            break;
         case ARCADE_PAGE_ORB_HUNT:
             OrbHuntRender_Init(&arcade->orb_hunt);
             break;
@@ -78,6 +82,7 @@ void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed) {
 
     SystemInfoPage_Init(&arcade->system_info);
     MPU6000Page_Init(&arcade->mpu6000);
+    TouchTestPage_Init(&arcade->touch_test);
     OrbHunt_Init(&arcade->orb_hunt,
                  ArcadeCollection_NextSeed(arcade));
     GravityPong_Init(&arcade->gravity_pong,
@@ -111,6 +116,9 @@ void ArcadeCollection_Update(ArcadeCollection *arcade,
             MPU6000Page_Update(&arcade->mpu6000,
                                mpu_data,
                                mpu_status);
+            break;
+        case ARCADE_PAGE_TOUCH_TEST:
+            TouchTestPage_Update(&arcade->touch_test);
             break;
         case ARCADE_PAGE_ORB_HUNT: {
             OrbHuntEvent event =
@@ -211,6 +219,9 @@ void ArcadeCollection_RestartActive(ArcadeCollection *arcade) {
         case ARCADE_PAGE_MPU6000:
             MPU6000_Init();
             MPU6000Page_Init(&arcade->mpu6000);
+            break;
+        case ARCADE_PAGE_TOUCH_TEST:
+            TouchTestPage_Init(&arcade->touch_test);
             break;
         case ARCADE_PAGE_ORB_HUNT:
             OrbHunt_Init(&arcade->orb_hunt, seed);

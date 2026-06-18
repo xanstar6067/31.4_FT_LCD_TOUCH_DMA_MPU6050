@@ -14,10 +14,12 @@
 #include "space_dodger_logic.h"
 #include "system_info_page.h"
 #include "tilt_breaker_logic.h"
+#include "touch_test_page.h"
 
 typedef enum {
     ARCADE_PAGE_SYSTEM_INFO = 0,
     ARCADE_PAGE_MPU6000,
+    ARCADE_PAGE_TOUCH_TEST,
     ARCADE_PAGE_ORB_HUNT,
     ARCADE_PAGE_GRAVITY_PONG,
     ARCADE_PAGE_TILT_BREAKER,
@@ -36,6 +38,7 @@ typedef struct {
     uint32_t seed;
     SystemInfoPage system_info;
     MPU6000Page mpu6000;
+    TouchTestPage touch_test;
     OrbHuntState orb_hunt;
     GravityPongState gravity_pong;
     TiltBreakerState tilt_breaker;
