@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "display_driver.h"
-#include "ili9341_touch.h"
 
 #define TOUCH_TEST_BACKGROUND       ILI9341_COLOR565(5, 8, 14)
 #define TOUCH_TEST_PANEL            ILI9341_COLOR565(12, 20, 29)
