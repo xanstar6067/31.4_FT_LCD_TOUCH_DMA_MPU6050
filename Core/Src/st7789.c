@@ -9,6 +9,10 @@ uint16_t ST7789_SCREEN_HEIGHT = 240;
 uint16_t ST7789_TOUCH_SCALE_X = 320;
 uint16_t ST7789_TOUCH_SCALE_Y = 240;
 
+static void ST7789_SetBacklight(GPIO_PinState state) {
+    HAL_GPIO_WritePin(ST7789_BL_GPIO_Port, ST7789_BL_Pin, state);
+}
+
 static void ST7789_Select(void) {
     HAL_GPIO_WritePin(W25Q_CS_GPIO_Port,
                       W25Q_CS_Pin,
@@ -22,9 +26,9 @@ void ST7789_Unselect(void) {
 
 static void ST7789_Reset(void) {
     HAL_GPIO_WritePin(ST7789_RES_GPIO_Port, ST7789_RES_Pin, GPIO_PIN_RESET);
-    HAL_Delay(5);
-    HAL_GPIO_WritePin(ST7789_RES_GPIO_Port, ST7789_RES_Pin, GPIO_PIN_SET);
     HAL_Delay(20);
+    HAL_GPIO_WritePin(ST7789_RES_GPIO_Port, ST7789_RES_Pin, GPIO_PIN_SET);
+    HAL_Delay(120);
 }
 
 static void ST7789_WriteCommand(uint8_t cmd) {
@@ -78,12 +82,33 @@ static void ST7789_WaitForDMA(void) {
     Display_DMA_WaitForTransfer();
 }
 
-void ST7789_Init(void) {
-    ST7789_Select();
-    ST7789_Reset();
+static void ST7789_UpdateGeometry(uint8_t orientation) {
+    st7789_orientation = orientation;
+    if ((orientation == ST7789_ORIENTATION_PORTRAIT) ||
+        (orientation == ST7789_ORIENTATION_PORTRAIT_UPSIDE)) {
+        ST7789_SCREEN_WIDTH = 240;
+        ST7789_SCREEN_HEIGHT = 320;
+        ST7789_TOUCH_SCALE_X = 240;
+        ST7789_TOUCH_SCALE_Y = 320;
+    } else {
+        ST7789_SCREEN_WIDTH = 320;
+        ST7789_SCREEN_HEIGHT = 240;
+        ST7789_TOUCH_SCALE_X = 320;
+        ST7789_TOUCH_SCALE_Y = 240;
+    }
+}
 
-    ST7789_WriteCommand(0x01);
-    HAL_Delay(150);
+static void ST7789_WriteOrientation(uint8_t orientation) {
+    ST7789_WriteCommand(0x36);
+    { uint8_t data[] = { orientation }; ST7789_WriteData(data, sizeof(data)); }
+    ST7789_UpdateGeometry(orientation);
+}
+
+void ST7789_Init(void) {
+    ST7789_SetBacklight(ST7789_BL_OFF_STATE);
+    ST7789_Unselect();
+    ST7789_Reset();
+    ST7789_Select();
 
     ST7789_WriteCommand(0x11);
     HAL_Delay(120);
@@ -118,6 +143,8 @@ void ST7789_Init(void) {
     ST7789_WriteCommand(0xD0);
     { uint8_t data[] = { 0xA4, 0xA1 }; ST7789_WriteData(data, sizeof(data)); }
 
+    ST7789_WriteOrientation(st7789_orientation);
+
     ST7789_WriteCommand(0xE0);
     {
         uint8_t data[] = {
@@ -137,31 +164,20 @@ void ST7789_Init(void) {
     }
 
     ST7789_WriteCommand(0x21);
-    ST7789_WriteCommand(0x29);
-    HAL_Delay(20);
+    ST7789_WriteCommand(0x13);
+    HAL_Delay(10);
 
-    ST7789_SetOrientation(st7789_orientation);
+    ST7789_WriteCommand(0x29);
+    HAL_Delay(120);
+
+    ST7789_Unselect();
+    ST7789_SetBacklight(ST7789_BL_ON_STATE);
 }
 
 void ST7789_SetOrientation(uint8_t orientation) {
     ST7789_Select();
-    ST7789_WriteCommand(0x36);
-    { uint8_t data[] = { orientation }; ST7789_WriteData(data, sizeof(data)); }
+    ST7789_WriteOrientation(orientation);
     ST7789_Unselect();
-
-    st7789_orientation = orientation;
-    if ((orientation == ST7789_ORIENTATION_PORTRAIT) ||
-        (orientation == ST7789_ORIENTATION_PORTRAIT_UPSIDE)) {
-        ST7789_SCREEN_WIDTH = 240;
-        ST7789_SCREEN_HEIGHT = 320;
-        ST7789_TOUCH_SCALE_X = 240;
-        ST7789_TOUCH_SCALE_Y = 320;
-    } else {
-        ST7789_SCREEN_WIDTH = 320;
-        ST7789_SCREEN_HEIGHT = 240;
-        ST7789_TOUCH_SCALE_X = 320;
-        ST7789_TOUCH_SCALE_Y = 240;
-    }
 }
 
 void ST7789_InvertColors(bool invert) {

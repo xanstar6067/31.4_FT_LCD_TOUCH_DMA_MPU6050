@@ -301,7 +301,7 @@ static void MX_SPI1_Init(void) {
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -445,10 +445,13 @@ static void MX_GPIO_Init(void) {
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(ELED1_GPIO_Port, ELED1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(ST7789_BL_GPIO_Port, ST7789_BL_Pin, ST7789_BL_OFF_STATE);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, ILI9341_DC_Pin|ILI9341_RES_Pin|ILI9341_CS_Pin|ILI9341_TOUCH_CS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, ILI9341_DC_Pin|ILI9341_RES_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, ILI9341_CS_Pin|ILI9341_TOUCH_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : LED_Pin */
   GPIO_InitStruct.Pin = LED_Pin;
@@ -463,12 +466,12 @@ static void MX_GPIO_Init(void) {
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(UKEY_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : ELED1_Pin */
-  GPIO_InitStruct.Pin = ELED1_Pin;
+  /*Configure GPIO pin : ST7789_BL_Pin */
+  GPIO_InitStruct.Pin = ST7789_BL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(ELED1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(ST7789_BL_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : ILI9341_TOUCH_IRQ_Pin */
   GPIO_InitStruct.Pin = ILI9341_TOUCH_IRQ_Pin;
@@ -493,6 +496,14 @@ static void MX_GPIO_Init(void) {
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(W25Q_CS_GPIO_Port, &GPIO_InitStruct);
+
+  HAL_GPIO_WritePin(ST7789_CS_GPIO_Port, ST7789_CS_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(ILI9341_TOUCH_CS_GPIO_Port,
+                    ILI9341_TOUCH_CS_Pin,
+                    GPIO_PIN_SET);
+  HAL_GPIO_WritePin(W25Q_CS_GPIO_Port, W25Q_CS_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(ST7789_RES_GPIO_Port, ST7789_RES_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(ST7789_BL_GPIO_Port, ST7789_BL_Pin, ST7789_BL_OFF_STATE);
   /* USER CODE END MX_GPIO_Init_2 */
 }
 

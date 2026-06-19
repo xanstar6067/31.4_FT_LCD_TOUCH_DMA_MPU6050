@@ -90,6 +90,24 @@ void Error_Handler(void);
 #define ST7789_CS_GPIO_Port ILI9341_CS_GPIO_Port
 #endif
 
+#ifndef ST7789_BL_Pin
+#ifdef ELED1_Pin
+#define ST7789_BL_Pin ELED1_Pin
+#define ST7789_BL_GPIO_Port ELED1_GPIO_Port
+#else
+#define ST7789_BL_Pin GPIO_PIN_1
+#define ST7789_BL_GPIO_Port GPIOA
+#endif
+#endif
+
+#ifndef ST7789_BL_ON_STATE
+#define ST7789_BL_ON_STATE GPIO_PIN_SET
+#endif
+
+#ifndef ST7789_BL_OFF_STATE
+#define ST7789_BL_OFF_STATE GPIO_PIN_RESET
+#endif
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
