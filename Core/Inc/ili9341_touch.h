@@ -2,8 +2,7 @@
 #define __ILI9341_TOUCH_H__
 
 #include <stdbool.h>
-#include "ili9341.h"
-#include "ili9341_config.h"  // Новый конфигурационный файл
+#include "display_driver.h"
 
 #define ILI9341_TOUCH_SPI_PORT hspi2
 extern SPI_HandleTypeDef ILI9341_TOUCH_SPI_PORT;

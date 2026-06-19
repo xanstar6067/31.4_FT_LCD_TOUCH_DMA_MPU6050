@@ -1,7 +1,7 @@
 #include "shake_flight_render.h"
 
 #include <stdio.h>
-#include "ili9341.h"
+#include "display_driver.h"
 #include "render_scratch.h"
 
 #define SHAKE_RENDER_PATCH_SIZE       36

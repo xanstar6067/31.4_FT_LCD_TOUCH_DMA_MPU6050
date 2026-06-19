@@ -1,7 +1,7 @@
 #include "system_info_page.h"
 
 #include <stdio.h>
-#include "ili9341.h"
+#include "display_driver.h"
 #include "main.h"
 
 extern SPI_HandleTypeDef hspi1;

@@ -1,7 +1,7 @@
 #include "orb_hunt_render.h"
 
 #include <stdio.h>
-#include "ili9341.h"
+#include "display_driver.h"
 #include "render_scratch.h"
 
 #define RENDER_PATCH_MAX_WIDTH   64

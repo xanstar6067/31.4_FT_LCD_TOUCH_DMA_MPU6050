@@ -5,7 +5,7 @@
  *      Author: Grok3
  */
 #include "button_renderer.h"
-#include "ili9341.h"
+#include "display_driver.h"
 
 void ButtonRenderer_Draw(VirtualButton* button) {
     uint16_t width = button->x2 - button->x1 + 1;

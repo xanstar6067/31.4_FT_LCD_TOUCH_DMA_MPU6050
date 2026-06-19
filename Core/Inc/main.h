@@ -81,6 +81,15 @@ void Error_Handler(void);
 #define W25Q_CS_GPIO_Port GPIOA
 #endif
 
+#ifndef ST7789_DC_Pin
+#define ST7789_DC_Pin ILI9341_DC_Pin
+#define ST7789_DC_GPIO_Port ILI9341_DC_GPIO_Port
+#define ST7789_RES_Pin ILI9341_RES_Pin
+#define ST7789_RES_GPIO_Port ILI9341_RES_GPIO_Port
+#define ST7789_CS_Pin ILI9341_CS_Pin
+#define ST7789_CS_GPIO_Port ILI9341_CS_GPIO_Port
+#endif
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

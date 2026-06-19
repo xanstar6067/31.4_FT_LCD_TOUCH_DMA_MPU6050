@@ -1,7 +1,7 @@
 #include "biplane_duel_render.h"
 
 #include <stdio.h>
-#include "ili9341.h"
+#include "display_driver.h"
 #include "render_scratch.h"
 
 #define BIPLANE_RENDER_PATCH_WIDTH       96U

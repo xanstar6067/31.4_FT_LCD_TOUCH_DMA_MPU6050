@@ -2,6 +2,7 @@
 
 #include "stm32f4xx_hal.h"
 #include "ili9341.h"
+#include "display_dma.h"
 #include <stdlib.h>
 
 // Глобальные переменные
@@ -12,7 +13,6 @@ uint16_t ILI9341_TOUCH_SCALE_X = 320;
 uint16_t ILI9341_TOUCH_SCALE_Y = 240;
 
 // Флаг для отслеживания завершения DMA
-volatile uint8_t dma_transfer_complete = 1; // 1 - передача завершена, 0 - в процессе
 
 // Вспомогательные функции
 static void ILI9341_Select(void) {
@@ -62,16 +62,7 @@ static void ILI9341_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint
 }
 
 static void ILI9341_WaitForDMA(void) {
-    while (!dma_transfer_complete) {
-        // Ждём завершения передачи
-    }
-}
-
-// Callback для завершения передачи DMA
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
-    if (hspi == &ILI9341_SPI_PORT) {
-        dma_transfer_complete = 1;
-    }
+    Display_DMA_WaitForTransfer();
 }
 
 // Управление и инициализация
@@ -325,7 +316,7 @@ void ILI9341_FillScreen_DMA(uint16_t color) {
 
     HAL_GPIO_WritePin(ILI9341_DC_GPIO_Port, ILI9341_DC_Pin, GPIO_PIN_SET);
     for (uint16_t y = 0; y < ILI9341_SCREEN_HEIGHT; y++) {
-        dma_transfer_complete = 0;
+        Display_DMA_MarkBusy();
         HAL_SPI_Transmit_DMA(&ILI9341_SPI_PORT, fill_buffer, ILI9341_SCREEN_WIDTH * 2);
         ILI9341_WaitForDMA();
     }
@@ -349,7 +340,7 @@ void ILI9341_FillRectangle_DMA(uint16_t x, uint16_t y, uint16_t w, uint16_t h, u
 
     HAL_GPIO_WritePin(ILI9341_DC_GPIO_Port, ILI9341_DC_Pin, GPIO_PIN_SET);
     for (uint16_t row = 0; row < h; row++) {
-        dma_transfer_complete = 0;
+        Display_DMA_MarkBusy();
         HAL_SPI_Transmit_DMA(&ILI9341_SPI_PORT, fill_buffer, w * 2);
         ILI9341_WaitForDMA();
     }
@@ -387,7 +378,7 @@ void ILI9341_WriteString_DMA(uint16_t x, uint16_t y, const char* str, FontDef fo
 
         ILI9341_SetAddressWindow(x, y, x + char_width - 1, y + char_height - 1);
         HAL_GPIO_WritePin(ILI9341_DC_GPIO_Port, ILI9341_DC_Pin, GPIO_PIN_SET);
-        dma_transfer_complete = 0;
+        Display_DMA_MarkBusy();
         HAL_SPI_Transmit_DMA(&ILI9341_SPI_PORT, char_buffer, char_width * char_height * 2);
         ILI9341_WaitForDMA();
 
@@ -407,7 +398,7 @@ void ILI9341_DrawImage_DMA(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const
 
     HAL_GPIO_WritePin(ILI9341_DC_GPIO_Port, ILI9341_DC_Pin, GPIO_PIN_SET);
     for (uint16_t row = 0; row < h; row++) {
-        dma_transfer_complete = 0;
+        Display_DMA_MarkBusy();
         HAL_SPI_Transmit_DMA(&ILI9341_SPI_PORT, (uint8_t*)&data[row * w], w * 2);
         ILI9341_WaitForDMA();
     }
@@ -431,7 +422,7 @@ void ILI9341_DrawImage_DMA_1D(uint16_t x, uint16_t y, uint16_t w, uint16_t h, co
         uint16_t chunk_size =
             (bytes_to_send > 65534U) ? 65534U : (uint16_t)bytes_to_send;
 
-        dma_transfer_complete = 0;
+        Display_DMA_MarkBusy();
         HAL_SPI_Transmit_DMA(&ILI9341_SPI_PORT, &data[offset], chunk_size);
         ILI9341_WaitForDMA();
         offset += chunk_size;

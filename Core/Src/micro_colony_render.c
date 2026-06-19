@@ -1,7 +1,7 @@
 #include "micro_colony_render.h"
 
 #include <stdio.h>
-#include "ili9341.h"
+#include "display_driver.h"
 
 #define MICRO_RENDER_BACKGROUND     ILI9341_COLOR565(2, 5, 7)
 #define MICRO_RENDER_BOARD_EMPTY    ILI9341_COLOR565(0, 2, 2)

@@ -1,7 +1,7 @@
 #include "marble_maze_render.h"
 
 #include <stdio.h>
-#include "ili9341.h"
+#include "display_driver.h"
 #include "render_scratch.h"
 
 #define MAZE_RENDER_PATCH_SIZE        32

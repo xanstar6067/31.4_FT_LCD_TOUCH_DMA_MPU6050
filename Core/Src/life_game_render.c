@@ -1,7 +1,7 @@
 #include "life_game_render.h"
 
 #include <stdio.h>
-#include "ili9341.h"
+#include "display_driver.h"
 
 #define LIFE_RENDER_BACKGROUND       ILI9341_COLOR565(2, 6, 9)
 #define LIFE_RENDER_PANEL            ILI9341_COLOR565(8, 17, 20)

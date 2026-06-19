@@ -3,7 +3,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
-#include "ili9341.h"
+#include "display_driver.h"
 
 #define MPU_PAGE_BACKGROUND       ILI9341_COLOR565(3, 8, 14)
 #define MPU_PAGE_PANEL            ILI9341_COLOR565(9, 19, 29)

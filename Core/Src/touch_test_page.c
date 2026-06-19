@@ -3,7 +3,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
-#include "ili9341.h"
+#include "display_driver.h"
 #include "ili9341_touch.h"
 
 #define TOUCH_TEST_BACKGROUND       ILI9341_COLOR565(5, 8, 14)

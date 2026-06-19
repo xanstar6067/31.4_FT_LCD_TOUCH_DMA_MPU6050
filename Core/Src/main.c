@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "ili9341.h"
+#include "display_driver.h"
 #include "ili9341_touch.h"
 #include "mpu6000.h"
 #include "arcade_collection.h"
