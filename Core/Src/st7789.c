@@ -9,6 +9,20 @@ uint16_t ST7789_SCREEN_HEIGHT = 240;
 uint16_t ST7789_TOUCH_SCALE_X = 320;
 uint16_t ST7789_TOUCH_SCALE_Y = 240;
 
+#define ST7789_MAX_LINE_PIXELS 320U
+
+static uint8_t st7789_image_line_buffer[ST7789_MAX_LINE_PIXELS * 2U];
+
+static void ST7789_PackRGB565Line(const uint16_t* src,
+                                  uint8_t* dst,
+                                  uint16_t pixels) {
+    for (uint16_t i = 0; i < pixels; i++) {
+        uint16_t color = src[i];
+        dst[(uint32_t)i * 2U] = (uint8_t)(color >> 8);
+        dst[(uint32_t)i * 2U + 1U] = (uint8_t)(color & 0xFF);
+    }
+}
+
 static void ST7789_SetBacklight(GPIO_PinState state) {
     HAL_GPIO_WritePin(ST7789_BL_GPIO_Port, ST7789_BL_Pin, state);
 }
@@ -163,7 +177,7 @@ void ST7789_Init(void) {
         ST7789_WriteData(data, sizeof(data));
     }
 
-    ST7789_WriteCommand(0x21);
+    ST7789_WriteCommand(0x20);
     ST7789_WriteCommand(0x13);
     HAL_Delay(10);
 
@@ -273,13 +287,19 @@ void ST7789_DrawImage(uint16_t x,
                       uint16_t w,
                       uint16_t h,
                       const uint16_t* data) {
+    if ((w == 0U) || (h == 0U)) return;
     if ((x >= ST7789_SCREEN_WIDTH) || (y >= ST7789_SCREEN_HEIGHT)) return;
     if ((x + w - 1) >= ST7789_SCREEN_WIDTH) return;
     if ((y + h - 1) >= ST7789_SCREEN_HEIGHT) return;
 
     ST7789_Select();
     ST7789_SetAddressWindow(x, y, x + w - 1, y + h - 1);
-    ST7789_WriteData((uint8_t*)data, sizeof(uint16_t) * w * h);
+    for (uint16_t row = 0; row < h; row++) {
+        ST7789_PackRGB565Line(&data[(uint32_t)row * w],
+                              st7789_image_line_buffer,
+                              w);
+        ST7789_WriteData(st7789_image_line_buffer, (size_t)w * 2U);
+    }
     ST7789_Unselect();
 }
 
@@ -500,6 +520,7 @@ void ST7789_DrawImage_DMA(uint16_t x,
                           uint16_t w,
                           uint16_t h,
                           const uint16_t* data) {
+    if ((w == 0U) || (h == 0U)) return;
     if ((x >= ST7789_SCREEN_WIDTH) || (y >= ST7789_SCREEN_HEIGHT)) return;
     if ((x + w - 1) >= ST7789_SCREEN_WIDTH) return;
     if ((y + h - 1) >= ST7789_SCREEN_HEIGHT) return;
@@ -509,9 +530,12 @@ void ST7789_DrawImage_DMA(uint16_t x,
 
     HAL_GPIO_WritePin(ST7789_DC_GPIO_Port, ST7789_DC_Pin, GPIO_PIN_SET);
     for (uint16_t row = 0; row < h; row++) {
+        ST7789_PackRGB565Line(&data[(uint32_t)row * w],
+                              st7789_image_line_buffer,
+                              w);
         Display_DMA_MarkBusy();
         HAL_SPI_Transmit_DMA(&ST7789_SPI_PORT,
-                             (uint8_t*)&data[row * w],
+                             st7789_image_line_buffer,
                              w * 2);
         ST7789_WaitForDMA();
     }
