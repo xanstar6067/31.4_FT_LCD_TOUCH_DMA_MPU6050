@@ -303,10 +303,10 @@ GravityPongEvent GravityPong_Update(GravityPongState *game,
                                     int16_t accel_x) {
     GravityPongEvent event = GRAVITY_PONG_EVENT_NONE;
 
-    GravityPong_UpdatePlayer(game, accel_x);
-    GravityPong_UpdateAi(game);
-
     if (game->phase != GRAVITY_PONG_PHASE_PLAYING) {
+        game->player.vx = 0.0f;
+        game->ai.vx = 0.0f;
+
         if (game->phase_ticks > 0U) {
             game->phase_ticks--;
         }
@@ -324,6 +324,9 @@ GravityPongEvent GravityPong_Update(GravityPongState *game,
         }
         return event;
     }
+
+    GravityPong_UpdatePlayer(game, accel_x);
+    GravityPong_UpdateAi(game);
 
     GravityPong_ApplyCore(game);
     game->ball.x += game->ball.vx;

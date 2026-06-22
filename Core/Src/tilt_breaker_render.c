@@ -13,6 +13,9 @@
 #define BREAKER_BRICK_ONE_COLOR         DISPLAY_BLUE
 #define BREAKER_BRICK_TWO_COLOR         DISPLAY_ORANGE
 #define BREAKER_BRICK_THREE_COLOR       DISPLAY_MAGENTA
+#define BREAKER_BONUS_WIDE_COLOR        DISPLAY_GREEN
+#define BREAKER_BONUS_SLOW_COLOR        DISPLAY_CYAN
+#define BREAKER_BONUS_LIFE_COLOR        DISPLAY_PINK
 
 #if (BREAKER_RENDER_PATCH_WIDTH * BREAKER_RENDER_PATCH_HEIGHT * 2U) > \
     RENDER_SCRATCH_BUFFER_SIZE
@@ -30,6 +33,10 @@ typedef struct {
 static int16_t previous_ball_x;
 static int16_t previous_ball_y;
 static int16_t previous_paddle_x;
+static uint16_t previous_paddle_width;
+static int16_t previous_bonus_x;
+static int16_t previous_bonus_y;
+static uint8_t previous_bonus_active;
 static uint8_t breaker_renderer_initialized;
 
 static int16_t BreakerRender_Round(float value) {
@@ -54,6 +61,32 @@ static uint16_t BreakerRender_BrickColor(uint8_t strength) {
         return BREAKER_BRICK_TWO_COLOR;
     }
     return BREAKER_BRICK_ONE_COLOR;
+}
+
+static uint16_t BreakerRender_BonusColor(TiltBreakerBonusType type) {
+    switch (type) {
+        case TILT_BREAKER_BONUS_WIDE:
+            return BREAKER_BONUS_WIDE_COLOR;
+        case TILT_BREAKER_BONUS_SLOW:
+            return BREAKER_BONUS_SLOW_COLOR;
+        case TILT_BREAKER_BONUS_LIFE:
+            return BREAKER_BONUS_LIFE_COLOR;
+        default:
+            return DISPLAY_WHITE;
+    }
+}
+
+static const char *BreakerRender_BonusLabel(TiltBreakerBonusType type) {
+    switch (type) {
+        case TILT_BREAKER_BONUS_WIDE:
+            return "W";
+        case TILT_BREAKER_BONUS_SLOW:
+            return "S";
+        case TILT_BREAKER_BONUS_LIFE:
+            return "+";
+        default:
+            return "?";
+    }
 }
 
 static uint16_t BreakerRender_StaticPixel(const TiltBreakerState *game,
@@ -109,8 +142,17 @@ static uint16_t BreakerRender_ComposedPixel(
         return BREAKER_BALL_COLOR;
     }
 
+    if ((game->bonus.active != 0U) &&
+        (x >= (int16_t)game->bonus.x) &&
+        (x < ((int16_t)game->bonus.x + TILT_BREAKER_BONUS_WIDTH)) &&
+        (y >= (int16_t)game->bonus.y) &&
+        (y < ((int16_t)game->bonus.y +
+              TILT_BREAKER_BONUS_HEIGHT))) {
+        return BreakerRender_BonusColor(game->bonus.type);
+    }
+
     if ((x >= paddle_x) &&
-        (x < (paddle_x + TILT_BREAKER_PADDLE_WIDTH)) &&
+        (x < (paddle_x + (int16_t)game->paddle.width)) &&
         (y >= TILT_BREAKER_PADDLE_Y) &&
         (y < (TILT_BREAKER_PADDLE_Y +
               TILT_BREAKER_PADDLE_HEIGHT))) {
@@ -173,6 +215,19 @@ static uint8_t BreakerRender_DrawPatch(const TiltBreakerState *game,
                              height,
                              breaker_patch_buffer);
     return 1U;
+}
+
+static void BreakerRender_DrawBonusLabel(const TiltBreakerState *game) {
+    if (game->bonus.active == 0U) {
+        return;
+    }
+
+    DISPLAY_WriteString_DMA((uint16_t)game->bonus.x + 4U,
+                            (uint16_t)game->bonus.y - 1U,
+                            BreakerRender_BonusLabel(game->bonus.type),
+                            Font_7x10,
+                            DISPLAY_BLACK,
+                            BreakerRender_BonusColor(game->bonus.type));
 }
 
 static void BreakerRender_DrawHud(const TiltBreakerState *game) {
@@ -249,9 +304,18 @@ static void BreakerRender_DrawWholeField(const TiltBreakerState *game) {
 
     DISPLAY_FillRectangle_DMA((uint16_t)paddle_x,
                               TILT_BREAKER_PADDLE_Y,
-                              TILT_BREAKER_PADDLE_WIDTH,
+                              game->paddle.width,
                               TILT_BREAKER_PADDLE_HEIGHT,
                               BREAKER_PADDLE_COLOR);
+    if (game->bonus.active != 0U) {
+        DISPLAY_FillRectangle_DMA((uint16_t)game->bonus.x,
+                                  (uint16_t)game->bonus.y,
+                                  TILT_BREAKER_BONUS_WIDTH,
+                                  TILT_BREAKER_BONUS_HEIGHT,
+                                  BreakerRender_BonusColor(
+                                      game->bonus.type));
+        BreakerRender_DrawBonusLabel(game);
+    }
     DISPLAY_FillCircle_DMA((uint16_t)ball_x,
                            (uint16_t)ball_y,
                            TILT_BREAKER_BALL_RADIUS,
@@ -264,6 +328,10 @@ static void BreakerRender_DrawWholeField(const TiltBreakerState *game) {
     previous_ball_x = ball_x;
     previous_ball_y = ball_y;
     previous_paddle_x = paddle_x;
+    previous_paddle_width = game->paddle.width;
+    previous_bonus_x = (int16_t)game->bonus.x;
+    previous_bonus_y = (int16_t)game->bonus.y;
+    previous_bonus_active = game->bonus.active;
     breaker_renderer_initialized = 1U;
 }
 
@@ -314,12 +382,15 @@ void TiltBreakerRender_Frame(const TiltBreakerState *game,
         BreakerRender_DrawHud(game);
     }
 
-    if (paddle_x != previous_paddle_x) {
+    if ((paddle_x != previous_paddle_x) ||
+        (game->paddle.width != previous_paddle_width)) {
         rect.x0 = (paddle_x < previous_paddle_x) ?
                   paddle_x - 1 : previous_paddle_x - 1;
-        rect.x1 = ((paddle_x > previous_paddle_x) ?
-                  paddle_x : previous_paddle_x) +
-                  TILT_BREAKER_PADDLE_WIDTH;
+        rect.x1 =
+            ((paddle_x + (int16_t)game->paddle.width) >
+             (previous_paddle_x + (int16_t)previous_paddle_width)) ?
+            (paddle_x + (int16_t)game->paddle.width) :
+            (previous_paddle_x + (int16_t)previous_paddle_width);
         rect.y0 = TILT_BREAKER_PADDLE_Y - 1;
         rect.y1 = TILT_BREAKER_PADDLE_Y +
                   TILT_BREAKER_PADDLE_HEIGHT;
@@ -328,6 +399,46 @@ void TiltBreakerRender_Frame(const TiltBreakerState *game,
                                     paddle_x) == 0U) {
             BreakerRender_DrawWholeField(game);
             return;
+        }
+    }
+
+    if ((event & TILT_BREAKER_EVENT_BONUS_CHANGED) != 0U) {
+        int16_t bonus_x = (int16_t)game->bonus.x;
+        int16_t bonus_y = (int16_t)game->bonus.y;
+
+        if ((previous_bonus_active != 0U) ||
+            (game->bonus.active != 0U)) {
+            rect.x0 = previous_bonus_x;
+            rect.y0 = previous_bonus_y;
+            rect.x1 = previous_bonus_x + TILT_BREAKER_BONUS_WIDTH;
+            rect.y1 = previous_bonus_y + TILT_BREAKER_BONUS_HEIGHT;
+
+            if (game->bonus.active != 0U) {
+                if (bonus_x < rect.x0) {
+                    rect.x0 = bonus_x;
+                }
+                if (bonus_y < rect.y0) {
+                    rect.y0 = bonus_y;
+                }
+                if ((bonus_x + TILT_BREAKER_BONUS_WIDTH) > rect.x1) {
+                    rect.x1 = bonus_x + TILT_BREAKER_BONUS_WIDTH;
+                }
+                if ((bonus_y + TILT_BREAKER_BONUS_HEIGHT) > rect.y1) {
+                    rect.y1 = bonus_y + TILT_BREAKER_BONUS_HEIGHT;
+                }
+            }
+
+            rect.x0--;
+            rect.y0--;
+            rect.x1++;
+            rect.y1++;
+            if (BreakerRender_DrawPatch(game, rect,
+                                        ball_x, ball_y,
+                                        paddle_x) == 0U) {
+                BreakerRender_DrawWholeField(game);
+                return;
+            }
+            BreakerRender_DrawBonusLabel(game);
         }
     }
 
@@ -355,4 +466,8 @@ void TiltBreakerRender_Frame(const TiltBreakerState *game,
     previous_ball_x = ball_x;
     previous_ball_y = ball_y;
     previous_paddle_x = paddle_x;
+    previous_paddle_width = game->paddle.width;
+    previous_bonus_x = (int16_t)game->bonus.x;
+    previous_bonus_y = (int16_t)game->bonus.y;
+    previous_bonus_active = game->bonus.active;
 }

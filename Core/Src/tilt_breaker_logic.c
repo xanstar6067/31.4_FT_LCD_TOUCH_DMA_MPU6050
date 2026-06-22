@@ -6,18 +6,24 @@
 #define BREAKER_INPUT_DEAD_ZONE       280.0f
 #define BREAKER_PADDLE_ACCEL_SCALE    0.00045f
 #define BREAKER_PADDLE_FRICTION       0.82f
-#define BREAKER_PADDLE_MAX_SPEED      7.2f
+#define BREAKER_PADDLE_MAX_SPEED      7.8f
 
-#define BREAKER_INITIAL_BALL_SPEED    3.8f
-#define BREAKER_MAX_BALL_SPEED        8.2f
-#define BREAKER_MIN_VERTICAL_SPEED    2.4f
+#define BREAKER_INITIAL_BALL_SPEED    3.3f
+#define BREAKER_MAX_BALL_SPEED        6.5f
+#define BREAKER_MIN_VERTICAL_SPEED    2.1f
 #define BREAKER_PADDLE_SPIN           0.38f
-#define BREAKER_HIT_ANGLE             2.7f
-#define BREAKER_HIT_ACCELERATION      1.018f
+#define BREAKER_HIT_ANGLE             2.25f
+#define BREAKER_HIT_ACCELERATION      1.006f
 
 #define BREAKER_SERVE_PAUSE_TICKS     28U
 #define BREAKER_LEVEL_PAUSE_TICKS     45U
 #define BREAKER_GAME_OVER_TICKS       65U
+
+#define BREAKER_BONUS_SPEED           2.0f
+#define BREAKER_BONUS_CHANCE          5U
+#define BREAKER_WIDE_PADDLE_WIDTH     96U
+#define BREAKER_WIDE_TICKS            240U
+#define BREAKER_MAX_LIVES             6U
 
 static uint32_t TiltBreaker_Random(TiltBreakerState *game) {
     uint32_t value = game->rng_state;
@@ -73,14 +79,35 @@ void TiltBreaker_GetBrickRect(uint8_t index,
 }
 
 static void TiltBreaker_ResetPaddle(TiltBreakerState *game) {
+    game->paddle.width = TILT_BREAKER_PADDLE_WIDTH;
     game->paddle.x =
-        (TILT_BREAKER_SCREEN_WIDTH - TILT_BREAKER_PADDLE_WIDTH) / 2.0f;
+        (TILT_BREAKER_SCREEN_WIDTH - game->paddle.width) / 2.0f;
     game->paddle.vx = 0.0f;
+}
+
+static void TiltBreaker_ClearBonus(TiltBreakerState *game) {
+    game->bonus.active = 0U;
+    game->bonus.type = TILT_BREAKER_BONUS_NONE;
+    game->bonus.x = 0.0f;
+    game->bonus.y = 0.0f;
+}
+
+static void TiltBreaker_SetPaddleWidth(TiltBreakerState *game,
+                                       uint16_t width) {
+    float center =
+        game->paddle.x + (game->paddle.width / 2.0f);
+
+    game->paddle.width = width;
+    game->paddle.x =
+        TiltBreaker_Clamp(center - (game->paddle.width / 2.0f),
+                          0.0f,
+                          TILT_BREAKER_SCREEN_WIDTH -
+                          game->paddle.width);
 }
 
 static void TiltBreaker_ParkBall(TiltBreakerState *game) {
     game->ball.x =
-        game->paddle.x + (TILT_BREAKER_PADDLE_WIDTH / 2.0f);
+        game->paddle.x + (game->paddle.width / 2.0f);
     game->ball.y =
         TILT_BREAKER_PADDLE_Y - TILT_BREAKER_BALL_RADIUS - 2.0f;
     game->ball.vx = 0.0f;
@@ -123,6 +150,104 @@ static void TiltBreaker_LaunchBall(TiltBreakerState *game) {
     game->ball.vy = -BREAKER_INITIAL_BALL_SPEED;
     game->phase = TILT_BREAKER_PHASE_PLAYING;
     game->phase_ticks = 0U;
+}
+
+static void TiltBreaker_SpawnBonus(TiltBreakerState *game,
+                                   uint8_t brick_index) {
+    int16_t x;
+    int16_t y;
+    int16_t width;
+    int16_t height;
+
+    if ((game->bonus.active != 0U) ||
+        ((TiltBreaker_Random(game) % BREAKER_BONUS_CHANCE) != 0U)) {
+        return;
+    }
+
+    TiltBreaker_GetBrickRect(brick_index, &x, &y, &width, &height);
+    game->bonus.x =
+        x + (width / 2.0f) - (TILT_BREAKER_BONUS_WIDTH / 2.0f);
+    game->bonus.y =
+        y + (height / 2.0f) - (TILT_BREAKER_BONUS_HEIGHT / 2.0f);
+    game->bonus.type =
+        (TiltBreakerBonusType)(1U + (TiltBreaker_Random(game) % 3U));
+    game->bonus.active = 1U;
+}
+
+static void TiltBreaker_ApplyBonus(TiltBreakerState *game,
+                                   TiltBreakerBonusType type) {
+    float speed;
+
+    switch (type) {
+        case TILT_BREAKER_BONUS_WIDE:
+            TiltBreaker_SetPaddleWidth(game, BREAKER_WIDE_PADDLE_WIDTH);
+            game->wide_ticks = BREAKER_WIDE_TICKS;
+            break;
+
+        case TILT_BREAKER_BONUS_SLOW:
+            speed = sqrtf((game->ball.vx * game->ball.vx) +
+                          (game->ball.vy * game->ball.vy));
+            TiltBreaker_NormalizeBallSpeed(game, speed * 0.72f);
+            break;
+
+        case TILT_BREAKER_BONUS_LIFE:
+            if (game->lives < BREAKER_MAX_LIVES) {
+                game->lives++;
+            }
+            break;
+
+        default:
+            break;
+    }
+}
+
+static TiltBreakerEvent TiltBreaker_UpdateBonus(TiltBreakerState *game) {
+    float bonus_left;
+    float bonus_right;
+    float bonus_bottom;
+    float paddle_right;
+    TiltBreakerEvent event = TILT_BREAKER_EVENT_NONE;
+
+    if (game->wide_ticks > 0U) {
+        game->wide_ticks--;
+        if (game->wide_ticks == 0U) {
+            TiltBreaker_SetPaddleWidth(game, TILT_BREAKER_PADDLE_WIDTH);
+            event |= TILT_BREAKER_EVENT_BONUS_CHANGED;
+        }
+    }
+
+    if (game->bonus.active == 0U) {
+        return event;
+    }
+
+    game->bonus.y += BREAKER_BONUS_SPEED;
+    bonus_left = game->bonus.x;
+    bonus_right = game->bonus.x + TILT_BREAKER_BONUS_WIDTH;
+    bonus_bottom = game->bonus.y + TILT_BREAKER_BONUS_HEIGHT;
+    paddle_right = game->paddle.x + game->paddle.width;
+
+    if ((bonus_bottom >= TILT_BREAKER_PADDLE_Y) &&
+        (game->bonus.y <= (TILT_BREAKER_PADDLE_Y +
+                           TILT_BREAKER_PADDLE_HEIGHT)) &&
+        (bonus_right >= game->paddle.x) &&
+        (bonus_left <= paddle_right)) {
+        TiltBreakerBonusType type = game->bonus.type;
+
+        TiltBreaker_ApplyBonus(game, type);
+        TiltBreaker_ClearBonus(game);
+        event |= TILT_BREAKER_EVENT_BONUS_CHANGED;
+        if (type == TILT_BREAKER_BONUS_LIFE) {
+            event |= TILT_BREAKER_EVENT_LIFE_CHANGED;
+        }
+        return event;
+    }
+
+    if (game->bonus.y > TILT_BREAKER_SCREEN_HEIGHT) {
+        TiltBreaker_ClearBonus(game);
+        return event | TILT_BREAKER_EVENT_BONUS_CHANGED;
+    }
+
+    return event | TILT_BREAKER_EVENT_BONUS_CHANGED;
 }
 
 static uint8_t TiltBreaker_BrickStrength(TiltBreakerState *game,
@@ -200,6 +325,8 @@ static void TiltBreaker_StartLevel(TiltBreakerState *game,
                                    uint16_t level) {
     game->level = level;
     game->changed_brick = TILT_BREAKER_NO_BRICK;
+    game->wide_ticks = 0U;
+    TiltBreaker_ClearBonus(game);
     TiltBreaker_GenerateLevel(game);
     TiltBreaker_ResetPaddle(game);
     TiltBreaker_ParkBall(game);
@@ -211,6 +338,8 @@ static void TiltBreaker_ResetGame(TiltBreakerState *game) {
     game->score = 0U;
     game->lives = TILT_BREAKER_STARTING_LIVES;
     game->filtered_accel_x = 0.0f;
+    game->wide_ticks = 0U;
+    TiltBreaker_ClearBonus(game);
     TiltBreaker_StartLevel(game, 1U);
 }
 
@@ -218,7 +347,7 @@ static void TiltBreaker_UpdatePaddle(TiltBreakerState *game,
                                      int16_t accel_x) {
     float control;
     float maximum_x =
-        TILT_BREAKER_SCREEN_WIDTH - TILT_BREAKER_PADDLE_WIDTH;
+        TILT_BREAKER_SCREEN_WIDTH - game->paddle.width;
 
     game->filtered_accel_x +=
         ((float)accel_x - game->filtered_accel_x) * BREAKER_INPUT_FILTER;
@@ -245,7 +374,7 @@ static void TiltBreaker_PaddleCollision(TiltBreakerState *game) {
     float ball_left = game->ball.x - TILT_BREAKER_BALL_RADIUS;
     float ball_right = game->ball.x + TILT_BREAKER_BALL_RADIUS;
     float paddle_right =
-        game->paddle.x + TILT_BREAKER_PADDLE_WIDTH;
+        game->paddle.x + game->paddle.width;
     float hit_offset;
     float speed;
 
@@ -265,8 +394,8 @@ static void TiltBreaker_PaddleCollision(TiltBreakerState *game) {
 
     hit_offset =
         (game->ball.x -
-         (game->paddle.x + (TILT_BREAKER_PADDLE_WIDTH / 2.0f))) /
-        (TILT_BREAKER_PADDLE_WIDTH / 2.0f);
+         (game->paddle.x + (game->paddle.width / 2.0f))) /
+        (game->paddle.width / 2.0f);
     hit_offset = TiltBreaker_Clamp(hit_offset, -1.0f, 1.0f);
     game->ball.vx +=
         (hit_offset * BREAKER_HIT_ANGLE) +
@@ -336,8 +465,12 @@ static TiltBreakerEvent TiltBreaker_BrickCollision(
         if (game->bricks[i] == 0U) {
             game->bricks_remaining--;
             game->score += 15U;
+            TiltBreaker_SpawnBonus(game, i);
         }
-        return TILT_BREAKER_EVENT_BRICK_CHANGED;
+        return TILT_BREAKER_EVENT_BRICK_CHANGED |
+               ((game->bonus.active != 0U) ?
+                TILT_BREAKER_EVENT_BONUS_CHANGED :
+                TILT_BREAKER_EVENT_NONE);
     }
 
     return TILT_BREAKER_EVENT_NONE;
@@ -395,6 +528,7 @@ TiltBreakerEvent TiltBreaker_Update(TiltBreakerState *game,
     }
 
     TiltBreaker_PaddleCollision(game);
+    event |= TiltBreaker_UpdateBonus(game);
     event |= TiltBreaker_BrickCollision(game);
 
     if (game->bricks_remaining == 0U) {
@@ -407,6 +541,9 @@ TiltBreakerEvent TiltBreaker_Update(TiltBreakerState *game,
         if (game->lives > 0U) {
             game->lives--;
         }
+        TiltBreaker_ClearBonus(game);
+        game->wide_ticks = 0U;
+        TiltBreaker_SetPaddleWidth(game, TILT_BREAKER_PADDLE_WIDTH);
         TiltBreaker_ParkBall(game);
 
         if (game->lives == 0U) {
@@ -416,7 +553,8 @@ TiltBreakerEvent TiltBreaker_Update(TiltBreakerState *game,
             game->phase = TILT_BREAKER_PHASE_SERVE_PAUSE;
             game->phase_ticks = BREAKER_SERVE_PAUSE_TICKS;
         }
-        event |= TILT_BREAKER_EVENT_LIFE_CHANGED;
+        event |= TILT_BREAKER_EVENT_LIFE_CHANGED |
+                 TILT_BREAKER_EVENT_BONUS_CHANGED;
     }
 
     return event;

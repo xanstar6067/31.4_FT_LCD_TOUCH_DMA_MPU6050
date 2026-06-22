@@ -16,12 +16,15 @@
 #define TILT_BREAKER_BRICK_ROWS         6U
 #define TILT_BREAKER_BRICK_COUNT        \
     (TILT_BREAKER_BRICK_COLUMNS * TILT_BREAKER_BRICK_ROWS)
-#define TILT_BREAKER_BRICK_WIDTH        34
-#define TILT_BREAKER_BRICK_HEIGHT       14
-#define TILT_BREAKER_BRICK_GAP_X        4
-#define TILT_BREAKER_BRICK_GAP_Y        4
-#define TILT_BREAKER_BRICK_LEFT         10
-#define TILT_BREAKER_BRICK_TOP          42
+#define TILT_BREAKER_BRICK_WIDTH        30
+#define TILT_BREAKER_BRICK_HEIGHT       11
+#define TILT_BREAKER_BRICK_GAP_X        8
+#define TILT_BREAKER_BRICK_GAP_Y        7
+#define TILT_BREAKER_BRICK_LEFT         12
+#define TILT_BREAKER_BRICK_TOP          44
+
+#define TILT_BREAKER_BONUS_WIDTH        14
+#define TILT_BREAKER_BONUS_HEIGHT       8
 
 #define TILT_BREAKER_STARTING_LIVES     3U
 #define TILT_BREAKER_NO_BRICK           0xFFU
@@ -36,7 +39,22 @@ typedef struct {
 typedef struct {
     float x;
     float vx;
+    uint16_t width;
 } TiltBreakerPaddle;
+
+typedef enum {
+    TILT_BREAKER_BONUS_NONE = 0,
+    TILT_BREAKER_BONUS_WIDE,
+    TILT_BREAKER_BONUS_SLOW,
+    TILT_BREAKER_BONUS_LIFE
+} TiltBreakerBonusType;
+
+typedef struct {
+    float x;
+    float y;
+    TiltBreakerBonusType type;
+    uint8_t active;
+} TiltBreakerBonus;
 
 typedef enum {
     TILT_BREAKER_PHASE_PLAYING = 0,
@@ -48,11 +66,13 @@ typedef enum {
 typedef struct {
     TiltBreakerBall ball;
     TiltBreakerPaddle paddle;
+    TiltBreakerBonus bonus;
     uint32_t rng_state;
     float filtered_accel_x;
     uint32_t score;
     uint16_t level;
     uint16_t phase_ticks;
+    uint16_t wide_ticks;
     uint8_t lives;
     uint8_t bricks_remaining;
     uint8_t changed_brick;
@@ -68,6 +88,7 @@ typedef uint8_t TiltBreakerEvent;
 #define TILT_BREAKER_EVENT_ROUND_STARTED    0x04U
 #define TILT_BREAKER_EVENT_LEVEL_STARTED    0x08U
 #define TILT_BREAKER_EVENT_GAME_STARTED     0x10U
+#define TILT_BREAKER_EVENT_BONUS_CHANGED    0x20U
 
 void TiltBreaker_Init(TiltBreakerState *game, uint32_t seed);
 TiltBreakerEvent TiltBreaker_Update(TiltBreakerState *game,
