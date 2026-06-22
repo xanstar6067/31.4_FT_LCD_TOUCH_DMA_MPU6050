@@ -3,13 +3,13 @@
 #include <stdio.h>
 #include "display_driver.h"
 
-#define MICRO_RENDER_BACKGROUND     ILI9341_COLOR565(2, 5, 7)
-#define MICRO_RENDER_BOARD_EMPTY    ILI9341_COLOR565(0, 2, 2)
-#define MICRO_RENDER_FOOD_1         ILI9341_COLOR565(4, 30, 9)
-#define MICRO_RENDER_FOOD_2         ILI9341_COLOR565(12, 60, 18)
-#define MICRO_RENDER_FOOD_3         ILI9341_COLOR565(35, 105, 32)
-#define MICRO_RENDER_GRID           ILI9341_COLOR565(5, 14, 16)
-#define MICRO_RENDER_HEADER         ILI9341_COLOR565(3, 10, 15)
+#define MICRO_RENDER_BACKGROUND     DISPLAY_COLOR565(2, 5, 7)
+#define MICRO_RENDER_BOARD_EMPTY    DISPLAY_COLOR565(0, 2, 2)
+#define MICRO_RENDER_FOOD_1         DISPLAY_COLOR565(4, 30, 9)
+#define MICRO_RENDER_FOOD_2         DISPLAY_COLOR565(12, 60, 18)
+#define MICRO_RENDER_FOOD_3         DISPLAY_COLOR565(35, 105, 32)
+#define MICRO_RENDER_GRID           DISPLAY_COLOR565(5, 14, 16)
+#define MICRO_RENDER_HEADER         DISPLAY_COLOR565(3, 10, 15)
 
 static uint8_t micro_renderer_initialized;
 static uint16_t displayed_population;
@@ -83,7 +83,7 @@ static uint16_t MicroColonyRender_HueColor(
             break;
     }
 
-    return ILI9341_COLOR565(r, g, b);
+    return DISPLAY_COLOR565(r, g, b);
 }
 
 static uint16_t MicroColonyRender_FoodColor(uint8_t food) {
@@ -136,38 +136,38 @@ static void MicroColonyRender_DrawCounter(uint16_t x,
 
     MicroColonyRender_FormatCounter(
         text, sizeof(text), value);
-    ILI9341_FillRectangle_DMA(x, y, width, 10,
+    DISPLAY_FillRectangle_DMA(x, y, width, 10,
                               MICRO_RENDER_HEADER);
-    ILI9341_WriteString_DMA(x, y, text, Font_7x10,
+    DISPLAY_WriteString_DMA(x, y, text, Font_7x10,
                             color, MICRO_RENDER_HEADER);
 }
 
 static void MicroColonyRender_DrawHeaderStatic(void) {
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         0, 0, MICRO_COLONY_SCREEN_WIDTH,
         MICRO_COLONY_HEADER_HEIGHT, MICRO_RENDER_HEADER);
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         0, MICRO_COLONY_HEADER_HEIGHT - 1U,
-        MICRO_COLONY_SCREEN_WIDTH, 1, ILI9341_GRAY);
-    ILI9341_WriteString_DMA(
+        MICRO_COLONY_SCREEN_WIDTH, 1, DISPLAY_GRAY);
+    DISPLAY_WriteString_DMA(
         4, 4, "MICRO COLONY", Font_11x18,
-        ILI9341_WHITE, MICRO_RENDER_HEADER);
+        DISPLAY_WHITE, MICRO_RENDER_HEADER);
 
-    ILI9341_WriteString_DMA(
+    DISPLAY_WriteString_DMA(
         144, 4, "P:", Font_7x10,
-        ILI9341_CYAN, MICRO_RENDER_HEADER);
-    ILI9341_WriteString_DMA(
+        DISPLAY_CYAN, MICRO_RENDER_HEADER);
+    DISPLAY_WriteString_DMA(
         205, 4, "F:", Font_7x10,
-        ILI9341_CYAN, MICRO_RENDER_HEADER);
-    ILI9341_WriteString_DMA(
+        DISPLAY_CYAN, MICRO_RENDER_HEADER);
+    DISPLAY_WriteString_DMA(
         144, 17, "B:", Font_7x10,
-        ILI9341_GREEN, MICRO_RENDER_HEADER);
-    ILI9341_WriteString_DMA(
+        DISPLAY_GREEN, MICRO_RENDER_HEADER);
+    DISPLAY_WriteString_DMA(
         205, 17, "D:", Font_7x10,
-        ILI9341_GREEN, MICRO_RENDER_HEADER);
-    ILI9341_WriteString_DMA(
+        DISPLAY_GREEN, MICRO_RENDER_HEADER);
+    DISPLAY_WriteString_DMA(
         266, 17, "E:", Font_7x10,
-        ILI9341_GREEN, MICRO_RENDER_HEADER);
+        DISPLAY_GREEN, MICRO_RENDER_HEADER);
 }
 
 static void MicroColonyRender_DrawHeaderStats(
@@ -185,38 +185,38 @@ static void MicroColonyRender_DrawHeaderStats(
     if ((force != 0U) ||
         (displayed_population != game->population)) {
         MicroColonyRender_DrawCounter(
-            158, 4, 38, game->population, ILI9341_CYAN);
+            158, 4, 38, game->population, DISPLAY_CYAN);
         displayed_population = game->population;
     }
     if ((force != 0U) ||
         (displayed_food != game->food_total)) {
         MicroColonyRender_DrawCounter(
-            219, 4, 42, game->food_total, ILI9341_CYAN);
+            219, 4, 42, game->food_total, DISPLAY_CYAN);
         displayed_food = game->food_total;
     }
     if ((force != 0U) ||
         (displayed_births != game->births)) {
         MicroColonyRender_DrawCounter(
-            158, 17, 42, game->births, ILI9341_GREEN);
+            158, 17, 42, game->births, DISPLAY_GREEN);
         displayed_births = game->births;
     }
     if ((force != 0U) ||
         (displayed_deaths != game->deaths)) {
         MicroColonyRender_DrawCounter(
-            219, 17, 42, game->deaths, ILI9341_GREEN);
+            219, 17, 42, game->deaths, DISPLAY_GREEN);
         displayed_deaths = game->deaths;
     }
     if ((force != 0U) ||
         (displayed_extinctions != game->extinctions)) {
         MicroColonyRender_DrawCounter(
-            280, 17, 38, game->extinctions, ILI9341_GREEN);
+            280, 17, 38, game->extinctions, DISPLAY_GREEN);
         displayed_extinctions = game->extinctions;
     }
 }
 
 static void MicroColonyRender_DrawGrid(void) {
     for (uint8_t row = 0U; row <= MICRO_COLONY_ROWS; row += 10U) {
-        ILI9341_FillRectangle_DMA(
+        DISPLAY_FillRectangle_DMA(
             MICRO_COLONY_BOARD_X,
             MICRO_COLONY_BOARD_Y +
             (row * MICRO_COLONY_CELL_SIZE),
@@ -257,7 +257,7 @@ static void MicroColonyRender_DrawCells(
                 run++;
             }
 
-            ILI9341_FillRectangle_DMA(
+            DISPLAY_FillRectangle_DMA(
                 MICRO_COLONY_BOARD_X +
                 (column * MICRO_COLONY_CELL_SIZE),
                 MICRO_COLONY_BOARD_Y +
@@ -277,7 +277,7 @@ static void MicroColonyRender_DrawCells(
 
 static void MicroColonyRender_DrawWhole(
     MicroColonyState *game) {
-    ILI9341_FillScreen_DMA(MICRO_RENDER_BACKGROUND);
+    DISPLAY_FillScreen_DMA(MICRO_RENDER_BACKGROUND);
     MicroColonyRender_DrawHeaderStatic();
     MicroColonyRender_DrawHeaderStats(game, 1U);
     MicroColonyRender_DrawCells(game, 0U);

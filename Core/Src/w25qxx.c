@@ -1,6 +1,7 @@
 #include "w25qxx.h"
 
 #include <string.h>
+#include "display_driver.h"
 #include "main.h"
 
 #define W25QXX_COMMAND_RELEASE_POWER_DOWN  0xABU
@@ -29,8 +30,8 @@ static W25QxxResult W25Qxx_Select(SPI_HandleTypeDef *hspi) {
         return result;
     }
 
-    HAL_GPIO_WritePin(ILI9341_CS_GPIO_Port,
-                      ILI9341_CS_Pin,
+    HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port,
+                      DISPLAY_CS_Pin,
                       GPIO_PIN_SET);
     HAL_GPIO_WritePin(W25Q_CS_GPIO_Port,
                       W25Q_CS_Pin,

@@ -210,14 +210,14 @@ void SysTick_Handler(void)
 void EXTI1_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI1_IRQn 0 */
- /* if (ILI9341_TouchPressed()) {
+ /* if (DISPLAY_TouchPressed()) {
       uint16_t x, y;
-      if (ILI9341_TouchGetCoordinates(&x, &y)) {
+      if (DISPLAY_TouchGetCoordinates(&x, &y)) {
           touch_data_ready = true; // Устанавливаем флаг новых данных
       }
   }*/
   /* USER CODE END EXTI1_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(ILI9341_TOUCH_IRQ_Pin);
+  HAL_GPIO_EXTI_IRQHandler(DISPLAY_TOUCH_IRQ_Pin);
   /* USER CODE BEGIN EXTI1_IRQn 1 */
   /* USER CODE END EXTI1_IRQn 1 */
 }

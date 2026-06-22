@@ -7,12 +7,12 @@
 #define BREAKER_RENDER_PATCH_WIDTH      96
 #define BREAKER_RENDER_PATCH_HEIGHT     32
 
-#define BREAKER_BACKGROUND_COLOR        ILI9341_COLOR565(3, 9, 14)
-#define BREAKER_PADDLE_COLOR            ILI9341_GREEN
-#define BREAKER_BALL_COLOR              ILI9341_CYAN
-#define BREAKER_BRICK_ONE_COLOR         ILI9341_BLUE
-#define BREAKER_BRICK_TWO_COLOR         ILI9341_ORANGE
-#define BREAKER_BRICK_THREE_COLOR       ILI9341_MAGENTA
+#define BREAKER_BACKGROUND_COLOR        DISPLAY_COLOR565(3, 9, 14)
+#define BREAKER_PADDLE_COLOR            DISPLAY_GREEN
+#define BREAKER_BALL_COLOR              DISPLAY_CYAN
+#define BREAKER_BRICK_ONE_COLOR         DISPLAY_BLUE
+#define BREAKER_BRICK_TWO_COLOR         DISPLAY_ORANGE
+#define BREAKER_BRICK_THREE_COLOR       DISPLAY_MAGENTA
 
 #if (BREAKER_RENDER_PATCH_WIDTH * BREAKER_RENDER_PATCH_HEIGHT * 2U) > \
     RENDER_SCRATCH_BUFFER_SIZE
@@ -104,7 +104,7 @@ static uint16_t BreakerRender_ComposedPixel(
                                         ball_x - 2,
                                         ball_y - 2,
                                         1) != 0U) {
-            return ILI9341_WHITE;
+            return DISPLAY_WHITE;
         }
         return BREAKER_BALL_COLOR;
     }
@@ -167,7 +167,7 @@ static uint8_t BreakerRender_DrawPatch(const TiltBreakerState *game,
         }
     }
 
-    ILI9341_DrawImage_DMA_1D((uint16_t)rect.x0,
+    DISPLAY_DrawImage_DMA_1D((uint16_t)rect.x0,
                              (uint16_t)rect.y0,
                              width,
                              height,
@@ -178,24 +178,24 @@ static uint8_t BreakerRender_DrawPatch(const TiltBreakerState *game,
 static void BreakerRender_DrawHud(const TiltBreakerState *game) {
     char status[24];
 
-    ILI9341_FillRectangle_DMA(0, 0,
+    DISPLAY_FillRectangle_DMA(0, 0,
                               TILT_BREAKER_SCREEN_WIDTH,
                               TILT_BREAKER_PLAYFIELD_TOP,
-                              ILI9341_BLACK);
-    ILI9341_FillRectangle_DMA(0,
+                              DISPLAY_BLACK);
+    DISPLAY_FillRectangle_DMA(0,
                               TILT_BREAKER_PLAYFIELD_TOP - 1,
                               TILT_BREAKER_SCREEN_WIDTH,
                               1,
-                              ILI9341_GRAY);
-    ILI9341_WriteString_DMA(4, 4, "TILT BREAKER", Font_11x18,
-                            ILI9341_WHITE, ILI9341_BLACK);
+                              DISPLAY_GRAY);
+    DISPLAY_WriteString_DMA(4, 4, "TILT BREAKER", Font_11x18,
+                            DISPLAY_WHITE, DISPLAY_BLACK);
 
     snprintf(status, sizeof(status), "L%u B%u X%u",
              (unsigned int)game->level,
              (unsigned int)game->bricks_remaining,
              (unsigned int)game->lives);
-    ILI9341_WriteString_DMA(210, 9, status, Font_7x10,
-                            ILI9341_YELLOW, ILI9341_BLACK);
+    DISPLAY_WriteString_DMA(210, 9, status, Font_7x10,
+                            DISPLAY_YELLOW, DISPLAY_BLACK);
 }
 
 static void BreakerRender_DrawBricks(const TiltBreakerState *game) {
@@ -210,7 +210,7 @@ static void BreakerRender_DrawBricks(const TiltBreakerState *game) {
         }
 
         TiltBreaker_GetBrickRect(i, &x, &y, &width, &height);
-        ILI9341_FillRectangle_DMA((uint16_t)(x + 1),
+        DISPLAY_FillRectangle_DMA((uint16_t)(x + 1),
                                   (uint16_t)(y + 1),
                                   (uint16_t)(width - 2),
                                   (uint16_t)(height - 2),
@@ -222,19 +222,19 @@ static void BreakerRender_DrawBricks(const TiltBreakerState *game) {
 static void BreakerRender_DrawPauseMessage(const TiltBreakerState *game) {
     const char *message = "READY";
     uint16_t x = 120U;
-    uint16_t color = ILI9341_CYAN;
+    uint16_t color = DISPLAY_CYAN;
 
     if (game->phase == TILT_BREAKER_PHASE_LEVEL_PAUSE) {
         message = "NEW LEVEL";
         x = 88U;
-        color = ILI9341_GREEN;
+        color = DISPLAY_GREEN;
     } else if (game->phase == TILT_BREAKER_PHASE_GAME_OVER_PAUSE) {
         message = "GAME OVER";
         x = 88U;
-        color = ILI9341_ORANGE;
+        color = DISPLAY_ORANGE;
     }
 
-    ILI9341_WriteString_DMA(x, 174, message, Font_16x26,
+    DISPLAY_WriteString_DMA(x, 174, message, Font_16x26,
                             color, BREAKER_BACKGROUND_COLOR);
 }
 
@@ -243,16 +243,16 @@ static void BreakerRender_DrawWholeField(const TiltBreakerState *game) {
     int16_t ball_y = BreakerRender_Round(game->ball.y);
     int16_t paddle_x = BreakerRender_Round(game->paddle.x);
 
-    ILI9341_FillScreen_DMA(BREAKER_BACKGROUND_COLOR);
+    DISPLAY_FillScreen_DMA(BREAKER_BACKGROUND_COLOR);
     BreakerRender_DrawBricks(game);
     BreakerRender_DrawHud(game);
 
-    ILI9341_FillRectangle_DMA((uint16_t)paddle_x,
+    DISPLAY_FillRectangle_DMA((uint16_t)paddle_x,
                               TILT_BREAKER_PADDLE_Y,
                               TILT_BREAKER_PADDLE_WIDTH,
                               TILT_BREAKER_PADDLE_HEIGHT,
                               BREAKER_PADDLE_COLOR);
-    ILI9341_FillCircle_DMA((uint16_t)ball_x,
+    DISPLAY_FillCircle_DMA((uint16_t)ball_x,
                            (uint16_t)ball_y,
                            TILT_BREAKER_BALL_RADIUS,
                            BREAKER_BALL_COLOR);

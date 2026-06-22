@@ -5,11 +5,11 @@
 #include <string.h>
 #include "display_driver.h"
 
-#define MPU_PAGE_BACKGROUND       ILI9341_COLOR565(3, 8, 14)
-#define MPU_PAGE_PANEL            ILI9341_COLOR565(9, 19, 29)
-#define MPU_PAGE_GRID             ILI9341_COLOR565(25, 49, 66)
-#define MPU_PAGE_ACCEL_COLOR      ILI9341_CYAN
-#define MPU_PAGE_GYRO_COLOR       ILI9341_ORANGE
+#define MPU_PAGE_BACKGROUND       DISPLAY_COLOR565(3, 8, 14)
+#define MPU_PAGE_PANEL            DISPLAY_COLOR565(9, 19, 29)
+#define MPU_PAGE_GRID             DISPLAY_COLOR565(25, 49, 66)
+#define MPU_PAGE_ACCEL_COLOR      DISPLAY_CYAN
+#define MPU_PAGE_GYRO_COLOR       DISPLAY_ORANGE
 #define MPU_PAGE_IDENTITY_TICKS   30U
 #define MPU_PAGE_TEXT_TICKS       3U
 #define MPU_PAGE_FOOTER_TICKS     6U
@@ -81,7 +81,7 @@ static void MPU6000Page_DrawBubblePatch(int16_t center_x,
                 color = bubble_color;
                 if (((dx + 2) * (dx + 2) +
                      (dy + 2) * (dy + 2)) <= 2) {
-                    color = ILI9341_WHITE;
+                    color = DISPLAY_WHITE;
                 }
             }
 
@@ -90,7 +90,7 @@ static void MPU6000Page_DrawBubblePatch(int16_t center_x,
         }
     }
 
-    ILI9341_DrawImage_DMA_1D((uint16_t)left,
+    DISPLAY_DrawImage_DMA_1D((uint16_t)left,
                              (uint16_t)top,
                              MPU_PAGE_BUBBLE_SIZE,
                              MPU_PAGE_BUBBLE_SIZE,
@@ -121,7 +121,7 @@ static void MPU6000Page_UpdateBubble(MPU6000Page *page) {
         bubble_x,
         bubble_y,
         1U,
-        page->online ? ILI9341_GREEN : ILI9341_RED);
+        page->online ? DISPLAY_GREEN : DISPLAY_RED);
     page->previous_bubble_x = bubble_x;
     page->previous_bubble_y = bubble_y;
 }
@@ -140,7 +140,7 @@ static void MPU6000Page_DrawBar(uint16_t x,
             uint16_t pixel = MPU_PAGE_GRID;
 
             if (column == center) {
-                pixel = ILI9341_GRAY;
+                pixel = DISPLAY_GRAY;
             }
             if (((amount > 0) &&
                  (column >= center) &&
@@ -156,7 +156,7 @@ static void MPU6000Page_DrawBar(uint16_t x,
         }
     }
 
-    ILI9341_DrawImage_DMA_1D(x, y,
+    DISPLAY_DrawImage_DMA_1D(x, y,
                              MPU_PAGE_BAR_WIDTH,
                              MPU_PAGE_BAR_HEIGHT,
                              bar_buffer);
@@ -200,8 +200,8 @@ static void MPU6000Page_DrawRawValue(uint16_t y,
     char text[12];
 
     snprintf(text, sizeof(text), "%c:%6d", axis, (int)value);
-    ILI9341_WriteString_DMA(164, y, text, Font_7x10,
-                            ILI9341_WHITE, MPU_PAGE_PANEL);
+    DISPLAY_WriteString_DMA(164, y, text, Font_7x10,
+                            DISPLAY_WHITE, MPU_PAGE_PANEL);
 }
 
 static void MPU6000Page_UpdateText(MPU6000Page *page,
@@ -242,7 +242,7 @@ static void MPU6000Page_UpdateText(MPU6000Page *page,
 static void MPU6000Page_UpdateStatus(MPU6000Page *page,
                                      uint8_t force) {
     char text[48];
-    uint16_t color = page->online ? ILI9341_GREEN : ILI9341_RED;
+    uint16_t color = page->online ? DISPLAY_GREEN : DISPLAY_RED;
 
     if ((force == 0U) &&
         (page->displayed_online == page->online) &&
@@ -251,14 +251,14 @@ static void MPU6000Page_UpdateStatus(MPU6000Page *page,
         return;
     }
 
-    ILI9341_FillRectangle_DMA(8, 44, 304, 20, MPU_PAGE_PANEL);
+    DISPLAY_FillRectangle_DMA(8, 44, 304, 20, MPU_PAGE_PANEL);
     snprintf(text, sizeof(text),
              "%s %s WHO:%02X ERR:%lu",
              page->online ? "ONLINE" : "OFFLINE",
              MPU6000_GetDeviceNameFromWhoAmI(page->who_am_i),
              page->who_am_i,
              (unsigned long)page->read_errors);
-    ILI9341_WriteString_DMA(13, 49, text, Font_7x10,
+    DISPLAY_WriteString_DMA(13, 49, text, Font_7x10,
                             color, MPU_PAGE_PANEL);
     page->displayed_who_am_i = page->who_am_i;
     page->displayed_errors = page->read_errors;
@@ -283,7 +283,7 @@ static void MPU6000Page_UpdateFooter(MPU6000Page *page,
         return;
     }
 
-    ILI9341_FillRectangle_DMA(8, 203, 304, 12,
+    DISPLAY_FillRectangle_DMA(8, 203, 304, 12,
                               MPU_PAGE_BACKGROUND);
     if (page->online != 0U) {
         snprintf(text, sizeof(text),
@@ -298,43 +298,43 @@ static void MPU6000Page_UpdateFooter(MPU6000Page *page,
                  "TEMP:--.--C  SAMPLES:%lu",
                  (unsigned long)page->successful_reads);
     }
-    ILI9341_WriteString_DMA(8, 205, text, Font_7x10,
-                            ILI9341_GRAY,
+    DISPLAY_WriteString_DMA(8, 205, text, Font_7x10,
+                            DISPLAY_GRAY,
                             MPU_PAGE_BACKGROUND);
     page->displayed_temperature = page->data.temperature;
     page->displayed_reads = page->successful_reads;
 }
 
 static void MPU6000Page_DrawStatic(void) {
-    ILI9341_FillScreen_DMA(MPU_PAGE_BACKGROUND);
-    ILI9341_FillRectangle_DMA(0, 0, 320, 38,
-                              ILI9341_DARK_BLUE);
-    ILI9341_WriteString_DMA(8, 6, "MPU6000 MONITOR",
+    DISPLAY_FillScreen_DMA(MPU_PAGE_BACKGROUND);
+    DISPLAY_FillRectangle_DMA(0, 0, 320, 38,
+                              DISPLAY_DARK_BLUE);
+    DISPLAY_WriteString_DMA(8, 6, "MPU6000 MONITOR",
                             Font_16x26,
-                            ILI9341_WHITE,
-                            ILI9341_DARK_BLUE);
-    ILI9341_WriteString_DMA(270, 14, "PAGE 1",
+                            DISPLAY_WHITE,
+                            DISPLAY_DARK_BLUE);
+    DISPLAY_WriteString_DMA(270, 14, "PAGE 1",
                             Font_7x10,
-                            ILI9341_CYAN,
-                            ILI9341_DARK_BLUE);
+                            DISPLAY_CYAN,
+                            DISPLAY_DARK_BLUE);
 
-    ILI9341_FillRectangle_DMA(8, 44, 304, 20, MPU_PAGE_PANEL);
-    ILI9341_FillRectangle_DMA(8, 70, 142, 126, MPU_PAGE_PANEL);
-    ILI9341_FillRectangle_DMA(157, 70, 155, 126, MPU_PAGE_PANEL);
-    ILI9341_FillRectangle_DMA(78, 76, 2, 114, MPU_PAGE_GRID);
-    ILI9341_FillRectangle_DMA(14, 131, 130, 2, MPU_PAGE_GRID);
-    ILI9341_FillRectangle_DMA(48, 80, 1, 106, MPU_PAGE_GRID);
-    ILI9341_FillRectangle_DMA(109, 80, 1, 106, MPU_PAGE_GRID);
-    ILI9341_FillRectangle_DMA(18, 102, 122, 1, MPU_PAGE_GRID);
-    ILI9341_FillRectangle_DMA(18, 161, 122, 1, MPU_PAGE_GRID);
+    DISPLAY_FillRectangle_DMA(8, 44, 304, 20, MPU_PAGE_PANEL);
+    DISPLAY_FillRectangle_DMA(8, 70, 142, 126, MPU_PAGE_PANEL);
+    DISPLAY_FillRectangle_DMA(157, 70, 155, 126, MPU_PAGE_PANEL);
+    DISPLAY_FillRectangle_DMA(78, 76, 2, 114, MPU_PAGE_GRID);
+    DISPLAY_FillRectangle_DMA(14, 131, 130, 2, MPU_PAGE_GRID);
+    DISPLAY_FillRectangle_DMA(48, 80, 1, 106, MPU_PAGE_GRID);
+    DISPLAY_FillRectangle_DMA(109, 80, 1, 106, MPU_PAGE_GRID);
+    DISPLAY_FillRectangle_DMA(18, 102, 122, 1, MPU_PAGE_GRID);
+    DISPLAY_FillRectangle_DMA(18, 161, 122, 1, MPU_PAGE_GRID);
 
-    ILI9341_WriteString_DMA(164, 74, "ACCEL RAW", Font_7x10,
+    DISPLAY_WriteString_DMA(164, 74, "ACCEL RAW", Font_7x10,
                             MPU_PAGE_ACCEL_COLOR, MPU_PAGE_PANEL);
-    ILI9341_WriteString_DMA(164, 139, "GYRO RAW", Font_7x10,
+    DISPLAY_WriteString_DMA(164, 139, "GYRO RAW", Font_7x10,
                             MPU_PAGE_GYRO_COLOR, MPU_PAGE_PANEL);
-    ILI9341_WriteString_DMA(
+    DISPLAY_WriteString_DMA(
         8, 220, "TILT:BUBBLE  BARS:SIGNED RAW  LONG:RETRY",
-        Font_7x10, ILI9341_WHITE, MPU_PAGE_BACKGROUND);
+        Font_7x10, DISPLAY_WHITE, MPU_PAGE_BACKGROUND);
 }
 
 void MPU6000Page_Init(MPU6000Page *page) {

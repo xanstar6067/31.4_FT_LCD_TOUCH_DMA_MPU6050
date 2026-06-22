@@ -7,13 +7,13 @@
 #define TOWER_RENDER_PATCH_WIDTH       160
 #define TOWER_RENDER_PATCH_HEIGHT      48
 
-#define TOWER_BACKGROUND_COLOR         ILI9341_COLOR565(5, 10, 16)
-#define TOWER_GRID_COLOR               ILI9341_COLOR565(15, 30, 40)
-#define TOWER_CENTER_COLOR             ILI9341_COLOR565(30, 65, 72)
-#define TOWER_PLATFORM_COLOR           ILI9341_COLOR565(65, 205, 190)
-#define TOWER_PLATFORM_EDGE_COLOR      ILI9341_WHITE
-#define TOWER_BASE_COLOR               ILI9341_COLOR565(45, 75, 82)
-#define TOWER_BLOCK_BORDER_COLOR       ILI9341_COLOR565(235, 225, 190)
+#define TOWER_BACKGROUND_COLOR         DISPLAY_COLOR565(5, 10, 16)
+#define TOWER_GRID_COLOR               DISPLAY_COLOR565(15, 30, 40)
+#define TOWER_CENTER_COLOR             DISPLAY_COLOR565(30, 65, 72)
+#define TOWER_PLATFORM_COLOR           DISPLAY_COLOR565(65, 205, 190)
+#define TOWER_PLATFORM_EDGE_COLOR      DISPLAY_WHITE
+#define TOWER_BASE_COLOR               DISPLAY_COLOR565(45, 75, 82)
+#define TOWER_BLOCK_BORDER_COLOR       DISPLAY_COLOR565(235, 225, 190)
 
 #if (TOWER_RENDER_PATCH_WIDTH * TOWER_RENDER_PATCH_HEIGHT * 2U) > \
     RENDER_SCRATCH_BUFFER_SIZE
@@ -28,11 +28,11 @@ typedef struct {
 } BalanceTowerRect;
 
 static const uint16_t tower_block_colors[] = {
-    ILI9341_ORANGE,
-    ILI9341_CYAN,
-    ILI9341_GREEN,
-    ILI9341_MAGENTA,
-    ILI9341_YELLOW
+    DISPLAY_ORANGE,
+    DISPLAY_CYAN,
+    DISPLAY_GREEN,
+    DISPLAY_MAGENTA,
+    DISPLAY_YELLOW
 };
 
 #define tower_patch_buffer render_scratch_buffer
@@ -292,7 +292,7 @@ static uint8_t BalanceTowerRender_DrawPatch(
         game, rect, width, height);
     BalanceTowerRender_DrawBlocksToPatch(
         game, rect, width, height);
-    ILI9341_DrawImage_DMA_1D(
+    DISPLAY_DrawImage_DMA_1D(
         (uint16_t)rect.x0,
         (uint16_t)rect.y0,
         width,
@@ -305,33 +305,33 @@ static void BalanceTowerRender_DrawHud(
     const BalanceTowerState *game) {
     char text[24];
 
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         0, 0, BALANCE_TOWER_SCREEN_WIDTH,
-        BALANCE_TOWER_PLAYFIELD_TOP, ILI9341_BLACK);
-    ILI9341_FillRectangle_DMA(
+        BALANCE_TOWER_PLAYFIELD_TOP, DISPLAY_BLACK);
+    DISPLAY_FillRectangle_DMA(
         0, BALANCE_TOWER_PLAYFIELD_TOP - 1,
-        BALANCE_TOWER_SCREEN_WIDTH, 1, ILI9341_GRAY);
-    ILI9341_WriteString_DMA(
+        BALANCE_TOWER_SCREEN_WIDTH, 1, DISPLAY_GRAY);
+    DISPLAY_WriteString_DMA(
         4, 4, "BALANCE TOWER", Font_11x18,
-        ILI9341_WHITE, ILI9341_BLACK);
+        DISPLAY_WHITE, DISPLAY_BLACK);
     snprintf(text, sizeof(text), "L%u %04lu",
              (unsigned int)game->level,
              (unsigned long)game->score);
-    ILI9341_WriteString_DMA(
+    DISPLAY_WriteString_DMA(
         180, 9, text, Font_7x10,
-        ILI9341_CYAN, ILI9341_BLACK);
-    ILI9341_WriteString_DMA(
+        DISPLAY_CYAN, DISPLAY_BLACK);
+    DISPLAY_WriteString_DMA(
         280, 9, "GZ", Font_7x10,
-        ILI9341_GREEN, ILI9341_BLACK);
+        DISPLAY_GREEN, DISPLAY_BLACK);
 }
 
 static void BalanceTowerRender_DrawStaticField(void) {
-    ILI9341_FillScreen_DMA(TOWER_BACKGROUND_COLOR);
+    DISPLAY_FillScreen_DMA(TOWER_BACKGROUND_COLOR);
 
     for (uint16_t x = 20U;
          x < BALANCE_TOWER_SCREEN_WIDTH;
          x += 40U) {
-        ILI9341_FillRectangle_DMA(
+        DISPLAY_FillRectangle_DMA(
             x, BALANCE_TOWER_PLAYFIELD_TOP,
             1, BALANCE_TOWER_PLATFORM_Y -
                BALANCE_TOWER_PLAYFIELD_TOP,
@@ -340,11 +340,11 @@ static void BalanceTowerRender_DrawStaticField(void) {
     for (uint16_t y = BALANCE_TOWER_PLAYFIELD_TOP;
          y < BALANCE_TOWER_PLATFORM_Y;
          y += 32U) {
-        ILI9341_FillRectangle_DMA(
+        DISPLAY_FillRectangle_DMA(
             0, y, BALANCE_TOWER_SCREEN_WIDTH,
             1, TOWER_GRID_COLOR);
     }
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         BALANCE_TOWER_PLATFORM_CENTER_X,
         BALANCE_TOWER_PLAYFIELD_TOP,
         1, BALANCE_TOWER_PLATFORM_Y -
@@ -355,7 +355,7 @@ static void BalanceTowerRender_DrawStaticField(void) {
          y++) {
         uint16_t half_width = (y - 213U) / 2U;
 
-        ILI9341_FillRectangle_DMA(
+        DISPLAY_FillRectangle_DMA(
             BALANCE_TOWER_PLATFORM_CENTER_X - half_width,
             y, (2U * half_width) + 1U, 1,
             TOWER_BASE_COLOR);
@@ -408,18 +408,18 @@ static void BalanceTowerRender_DrawWholeField(
     BalanceTowerRender_DrawHud(game);
 
     if (game->phase == BALANCE_TOWER_PHASE_CALIBRATING) {
-        ILI9341_WriteString_DMA(
+        DISPLAY_WriteString_DMA(
             72, 84, "HOLD STILL", Font_16x26,
-            ILI9341_YELLOW, TOWER_BACKGROUND_COLOR);
-        ILI9341_WriteString_DMA(
+            DISPLAY_YELLOW, TOWER_BACKGROUND_COLOR);
+        DISPLAY_WriteString_DMA(
             90, 121, "GYRO CALIBRATION", Font_7x10,
-            ILI9341_CYAN, TOWER_BACKGROUND_COLOR);
+            DISPLAY_CYAN, TOWER_BACKGROUND_COLOR);
     } else {
         BalanceTowerRender_DrawDynamic(game);
         if (game->phase == BALANCE_TOWER_PHASE_RECOVERY) {
-            ILI9341_WriteString_DMA(
+            DISPLAY_WriteString_DMA(
                 80, 90, "AUTO LEVEL", Font_16x26,
-                ILI9341_ORANGE, TOWER_BACKGROUND_COLOR);
+                DISPLAY_ORANGE, TOWER_BACKGROUND_COLOR);
         }
     }
 

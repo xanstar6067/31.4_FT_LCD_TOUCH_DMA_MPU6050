@@ -120,49 +120,49 @@ bool TOUCH_GET_COORDINATES(uint16_t* x, uint16_t* y) {
     TOUCH_RAW_X = avg_x;
     TOUCH_RAW_Y = avg_y;
 
-    if (avg_x < ILI9341_TOUCH_MIN_RAW_X) avg_x = ILI9341_TOUCH_MIN_RAW_X;
-    if (avg_x > ILI9341_TOUCH_MAX_RAW_X) avg_x = ILI9341_TOUCH_MAX_RAW_X;
-    if (avg_y < ILI9341_TOUCH_MIN_RAW_Y) avg_y = ILI9341_TOUCH_MIN_RAW_Y;
-    if (avg_y > ILI9341_TOUCH_MAX_RAW_Y) avg_y = ILI9341_TOUCH_MAX_RAW_Y;
+    if (avg_x < DISPLAY_TOUCH_MIN_RAW_X) avg_x = DISPLAY_TOUCH_MIN_RAW_X;
+    if (avg_x > DISPLAY_TOUCH_MAX_RAW_X) avg_x = DISPLAY_TOUCH_MAX_RAW_X;
+    if (avg_y < DISPLAY_TOUCH_MIN_RAW_Y) avg_y = DISPLAY_TOUCH_MIN_RAW_Y;
+    if (avg_y > DISPLAY_TOUCH_MAX_RAW_Y) avg_y = DISPLAY_TOUCH_MAX_RAW_Y;
 
-    if (ili9341_orientation == ILI9341_ORIENTATION_LANDSCAPE) {
-        *x = ILI9341_TOUCH_SCALE_X -
-             ((avg_y - ILI9341_TOUCH_MIN_RAW_Y) *
-              ILI9341_TOUCH_SCALE_X /
-              (ILI9341_TOUCH_MAX_RAW_Y - ILI9341_TOUCH_MIN_RAW_Y));
-        *y = (avg_x - ILI9341_TOUCH_MIN_RAW_X) *
-             ILI9341_TOUCH_SCALE_Y /
-             (ILI9341_TOUCH_MAX_RAW_X - ILI9341_TOUCH_MIN_RAW_X);
-    } else if (ili9341_orientation == ILI9341_ORIENTATION_LANDSCAPE_LEFT) {
-        *x = ILI9341_TOUCH_SCALE_X -
-             ((avg_y - ILI9341_TOUCH_MIN_RAW_Y) *
-              ILI9341_TOUCH_SCALE_X /
-              (ILI9341_TOUCH_MAX_RAW_Y - ILI9341_TOUCH_MIN_RAW_Y));
-        *y = ILI9341_TOUCH_SCALE_Y -
-             ((avg_x - ILI9341_TOUCH_MIN_RAW_X) *
-              ILI9341_TOUCH_SCALE_Y /
-              (ILI9341_TOUCH_MAX_RAW_X - ILI9341_TOUCH_MIN_RAW_X));
-    } else if (ili9341_orientation == ILI9341_ORIENTATION_PORTRAIT) {
-        *x = (avg_x - ILI9341_TOUCH_MIN_RAW_X) *
-             ILI9341_TOUCH_SCALE_X /
-             (ILI9341_TOUCH_MAX_RAW_X - ILI9341_TOUCH_MIN_RAW_X);
-        *y = ILI9341_TOUCH_SCALE_Y -
-             ((avg_y - ILI9341_TOUCH_MIN_RAW_Y) *
-              ILI9341_TOUCH_SCALE_Y /
-              (ILI9341_TOUCH_MAX_RAW_Y - ILI9341_TOUCH_MIN_RAW_Y));
-    } else if (ili9341_orientation == ILI9341_ORIENTATION_PORTRAIT_UPSIDE) {
-        *x = ILI9341_TOUCH_SCALE_X -
-             ((avg_x - ILI9341_TOUCH_MIN_RAW_X) *
-              ILI9341_TOUCH_SCALE_X /
-              (ILI9341_TOUCH_MAX_RAW_X - ILI9341_TOUCH_MIN_RAW_X));
-        *y = (avg_y - ILI9341_TOUCH_MIN_RAW_Y) *
-             ILI9341_TOUCH_SCALE_Y /
-             (ILI9341_TOUCH_MAX_RAW_Y - ILI9341_TOUCH_MIN_RAW_Y);
+    if (display_orientation == DISPLAY_ORIENTATION_LANDSCAPE) {
+        *x = DISPLAY_TOUCH_SCALE_X -
+             ((avg_y - DISPLAY_TOUCH_MIN_RAW_Y) *
+              DISPLAY_TOUCH_SCALE_X /
+              (DISPLAY_TOUCH_MAX_RAW_Y - DISPLAY_TOUCH_MIN_RAW_Y));
+        *y = (avg_x - DISPLAY_TOUCH_MIN_RAW_X) *
+             DISPLAY_TOUCH_SCALE_Y /
+             (DISPLAY_TOUCH_MAX_RAW_X - DISPLAY_TOUCH_MIN_RAW_X);
+    } else if (display_orientation == DISPLAY_ORIENTATION_LANDSCAPE_LEFT) {
+        *x = DISPLAY_TOUCH_SCALE_X -
+             ((avg_y - DISPLAY_TOUCH_MIN_RAW_Y) *
+              DISPLAY_TOUCH_SCALE_X /
+              (DISPLAY_TOUCH_MAX_RAW_Y - DISPLAY_TOUCH_MIN_RAW_Y));
+        *y = DISPLAY_TOUCH_SCALE_Y -
+             ((avg_x - DISPLAY_TOUCH_MIN_RAW_X) *
+              DISPLAY_TOUCH_SCALE_Y /
+              (DISPLAY_TOUCH_MAX_RAW_X - DISPLAY_TOUCH_MIN_RAW_X));
+    } else if (display_orientation == DISPLAY_ORIENTATION_PORTRAIT) {
+        *x = (avg_x - DISPLAY_TOUCH_MIN_RAW_X) *
+             DISPLAY_TOUCH_SCALE_X /
+             (DISPLAY_TOUCH_MAX_RAW_X - DISPLAY_TOUCH_MIN_RAW_X);
+        *y = DISPLAY_TOUCH_SCALE_Y -
+             ((avg_y - DISPLAY_TOUCH_MIN_RAW_Y) *
+              DISPLAY_TOUCH_SCALE_Y /
+              (DISPLAY_TOUCH_MAX_RAW_Y - DISPLAY_TOUCH_MIN_RAW_Y));
+    } else if (display_orientation == DISPLAY_ORIENTATION_PORTRAIT_UPSIDE) {
+        *x = DISPLAY_TOUCH_SCALE_X -
+             ((avg_x - DISPLAY_TOUCH_MIN_RAW_X) *
+              DISPLAY_TOUCH_SCALE_X /
+              (DISPLAY_TOUCH_MAX_RAW_X - DISPLAY_TOUCH_MIN_RAW_X));
+        *y = (avg_y - DISPLAY_TOUCH_MIN_RAW_Y) *
+             DISPLAY_TOUCH_SCALE_Y /
+             (DISPLAY_TOUCH_MAX_RAW_Y - DISPLAY_TOUCH_MIN_RAW_Y);
     }
 
 #if TOUCH_MIRROR_COORDS
-    *x = TouchMirror(*x, ILI9341_TOUCH_SCALE_X);
-    *y = TouchMirror(*y, ILI9341_TOUCH_SCALE_Y);
+    *x = TouchMirror(*x, DISPLAY_TOUCH_SCALE_X);
+    *y = TouchMirror(*y, DISPLAY_TOUCH_SCALE_Y);
 #endif
 
     TOUCH_X = *x;

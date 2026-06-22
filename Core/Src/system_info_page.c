@@ -6,8 +6,8 @@
 
 extern SPI_HandleTypeDef hspi1;
 
-#define SYSTEM_INFO_BACKGROUND ILI9341_COLOR565(4, 9, 16)
-#define SYSTEM_INFO_PANEL      ILI9341_COLOR565(10, 22, 34)
+#define SYSTEM_INFO_BACKGROUND DISPLAY_COLOR565(4, 9, 16)
+#define SYSTEM_INFO_PANEL      DISPLAY_COLOR565(10, 22, 34)
 
 static uint32_t SystemInfoPage_GetSpiClock(void) {
     uint32_t divider = 2U;
@@ -82,47 +82,47 @@ void SystemInfoPage_Render(const SystemInfoPage *page) {
     const W25QxxInfo *flash = &page->external_flash;
     uint16_t flash_color =
         (flash->result == W25QXX_RESULT_OK) ?
-        ILI9341_GREEN : ILI9341_RED;
+        DISPLAY_GREEN : DISPLAY_RED;
 
-    ILI9341_FillScreen_DMA(SYSTEM_INFO_BACKGROUND);
-    ILI9341_FillRectangle_DMA(0, 0, 320, 40,
-                              ILI9341_DARK_BLUE);
-    ILI9341_WriteString_DMA(8, 7, "SYSTEM INFO", Font_16x26,
-                            ILI9341_WHITE, ILI9341_DARK_BLUE);
-    ILI9341_WriteString_DMA(270, 15, "PAGE 0", Font_7x10,
-                            ILI9341_CYAN, ILI9341_DARK_BLUE);
+    DISPLAY_FillScreen_DMA(SYSTEM_INFO_BACKGROUND);
+    DISPLAY_FillRectangle_DMA(0, 0, 320, 40,
+                              DISPLAY_DARK_BLUE);
+    DISPLAY_WriteString_DMA(8, 7, "SYSTEM INFO", Font_16x26,
+                            DISPLAY_WHITE, DISPLAY_DARK_BLUE);
+    DISPLAY_WriteString_DMA(270, 15, "PAGE 0", Font_7x10,
+                            DISPLAY_CYAN, DISPLAY_DARK_BLUE);
 
-    ILI9341_FillRectangle_DMA(6, 46, 308, 70,
+    DISPLAY_FillRectangle_DMA(6, 46, 308, 70,
                               SYSTEM_INFO_PANEL);
-    ILI9341_WriteString_DMA(12, 51, "WEACT BLACK PILL",
+    DISPLAY_WriteString_DMA(12, 51, "WEACT BLACK PILL",
                             Font_11x18,
-                            ILI9341_CYAN, SYSTEM_INFO_PANEL);
+                            DISPLAY_CYAN, SYSTEM_INFO_PANEL);
     snprintf(text, sizeof(text),
              "STM32F411CEU6  CPU:%luMHZ  RAM:128KB",
              (unsigned long)(page->system_clock_hz / 1000000U));
-    ILI9341_WriteString_DMA(12, 74, text, Font_7x10,
-                            ILI9341_WHITE, SYSTEM_INFO_PANEL);
+    DISPLAY_WriteString_DMA(12, 74, text, Font_7x10,
+                            DISPLAY_WHITE, SYSTEM_INFO_PANEL);
     snprintf(text, sizeof(text),
              "FLASH:%uKB  DEV:%03X  REV:%04X",
              (unsigned int)page->internal_flash_kb,
              (unsigned int)page->device_id,
              (unsigned int)page->revision_id);
-    ILI9341_WriteString_DMA(12, 88, text, Font_7x10,
-                            ILI9341_WHITE, SYSTEM_INFO_PANEL);
+    DISPLAY_WriteString_DMA(12, 88, text, Font_7x10,
+                            DISPLAY_WHITE, SYSTEM_INFO_PANEL);
     snprintf(text, sizeof(text), "UID:%08lX-%08lX-%08lX",
              (unsigned long)page->mcu_uid[0],
              (unsigned long)page->mcu_uid[1],
              (unsigned long)page->mcu_uid[2]);
-    ILI9341_WriteString_DMA(12, 102, text, Font_7x10,
-                            ILI9341_GRAY, SYSTEM_INFO_PANEL);
+    DISPLAY_WriteString_DMA(12, 102, text, Font_7x10,
+                            DISPLAY_GRAY, SYSTEM_INFO_PANEL);
 
-    ILI9341_FillRectangle_DMA(6, 122, 308, 82,
+    DISPLAY_FillRectangle_DMA(6, 122, 308, 82,
                               SYSTEM_INFO_PANEL);
-    ILI9341_WriteString_DMA(12, 127, "EXTERNAL SPI FLASH",
+    DISPLAY_WriteString_DMA(12, 127, "EXTERNAL SPI FLASH",
                             Font_11x18,
-                            ILI9341_YELLOW, SYSTEM_INFO_PANEL);
+                            DISPLAY_YELLOW, SYSTEM_INFO_PANEL);
     SystemInfoPage_FormatFlashName(flash, text, sizeof(text));
-    ILI9341_WriteString_DMA(12, 149, text, Font_11x18,
+    DISPLAY_WriteString_DMA(12, 149, text, Font_11x18,
                             flash_color, SYSTEM_INFO_PANEL);
 
     if (flash->result == W25QXX_RESULT_OK) {
@@ -132,8 +132,8 @@ void SystemInfoPage_Render(const SystemInfoPage *page) {
                  flash->memory_type,
                  flash->capacity_id,
                  (unsigned long)(flash->capacity_bytes / 1024U));
-        ILI9341_WriteString_DMA(12, 171, text, Font_7x10,
-                                ILI9341_WHITE,
+        DISPLAY_WriteString_DMA(12, 171, text, Font_7x10,
+                                DISPLAY_WHITE,
                                 SYSTEM_INFO_PANEL);
         snprintf(text, sizeof(text),
                  "SR:%02X %02X %02X UID:%02X%02X%02X%02X%02X%02X%02X%02X",
@@ -144,22 +144,22 @@ void SystemInfoPage_Render(const SystemInfoPage *page) {
                  flash->unique_id[2], flash->unique_id[3],
                  flash->unique_id[4], flash->unique_id[5],
                  flash->unique_id[6], flash->unique_id[7]);
-        ILI9341_WriteString_DMA(12, 185, text, Font_7x10,
-                                ILI9341_GRAY,
+        DISPLAY_WriteString_DMA(12, 185, text, Font_7x10,
+                                DISPLAY_GRAY,
                                 SYSTEM_INFO_PANEL);
     } else {
-        ILI9341_WriteString_DMA(
+        DISPLAY_WriteString_DMA(
             12, 176, "CHECK CS:PA4  MISO:PA6  POWER:3V3",
-            Font_7x10, ILI9341_ORANGE, SYSTEM_INFO_PANEL);
+            Font_7x10, DISPLAY_ORANGE, SYSTEM_INFO_PANEL);
     }
 
     snprintf(text, sizeof(text),
              "SPI1:%luMHZ  TFT CS:PB5  FLASH CS:PA4",
              (unsigned long)(page->spi1_clock_hz / 1000000U));
-    ILI9341_WriteString_DMA(8, 211, text, Font_7x10,
-                            ILI9341_CYAN,
+    DISPLAY_WriteString_DMA(8, 211, text, Font_7x10,
+                            DISPLAY_CYAN,
                             SYSTEM_INFO_BACKGROUND);
-    ILI9341_WriteString_DMA(
+    DISPLAY_WriteString_DMA(
         8, 226, "UKEY SHORT:NEXT   LONG:REFRESH",
-        Font_7x10, ILI9341_WHITE, SYSTEM_INFO_BACKGROUND);
+        Font_7x10, DISPLAY_WHITE, SYSTEM_INFO_BACKGROUND);
 }

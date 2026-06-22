@@ -5,10 +5,10 @@
 #include "render_scratch.h"
 
 #define MAZE_RENDER_PATCH_SIZE        32
-#define MAZE_WALL_COLOR               ILI9341_COLOR565(95, 150, 180)
-#define MAZE_WALL_HIGHLIGHT           ILI9341_COLOR565(160, 220, 235)
-#define MAZE_BALL_COLOR               ILI9341_ORANGE
-#define MAZE_GOAL_COLOR               ILI9341_GREEN
+#define MAZE_WALL_COLOR               DISPLAY_COLOR565(95, 150, 180)
+#define MAZE_WALL_HIGHLIGHT           DISPLAY_COLOR565(160, 220, 235)
+#define MAZE_BALL_COLOR               DISPLAY_ORANGE
+#define MAZE_GOAL_COLOR               DISPLAY_GREEN
 
 #if (MAZE_RENDER_PATCH_SIZE * MAZE_RENDER_PATCH_SIZE * 2U) > \
     RENDER_SCRATCH_BUFFER_SIZE
@@ -23,11 +23,11 @@ typedef struct {
 } MarbleMazeRect;
 
 static const uint16_t maze_backgrounds[] = {
-    ILI9341_COLOR565(4, 12, 19),
-    ILI9341_COLOR565(15, 7, 20),
-    ILI9341_COLOR565(4, 18, 14),
-    ILI9341_COLOR565(19, 10, 3),
-    ILI9341_COLOR565(5, 7, 24)
+    DISPLAY_COLOR565(4, 12, 19),
+    DISPLAY_COLOR565(15, 7, 20),
+    DISPLAY_COLOR565(4, 18, 14),
+    DISPLAY_COLOR565(19, 10, 3),
+    DISPLAY_COLOR565(5, 7, 24)
 };
 
 #define maze_patch_buffer render_scratch_buffer
@@ -85,7 +85,7 @@ static uint16_t MarbleMazeRender_StaticPixel(
             MARBLE_MAZE_GOAL_RADIUS) != 0U) {
         if (MarbleMazeRender_PointInCircle(
                 x, y, goal_x, goal_y, 3) != 0U) {
-            return ILI9341_WHITE;
+            return DISPLAY_WHITE;
         }
         return MAZE_GOAL_COLOR;
     }
@@ -161,7 +161,7 @@ static uint16_t MarbleMazeRender_ComposedPixel(
             MARBLE_MAZE_BALL_RADIUS) != 0U) {
         if (MarbleMazeRender_PointInCircle(
                 x, y, ball_x - 2, ball_y - 2, 2) != 0U) {
-            return ILI9341_WHITE;
+            return DISPLAY_WHITE;
         }
         return MAZE_BALL_COLOR;
     }
@@ -212,7 +212,7 @@ static uint8_t MarbleMazeRender_DrawPatch(
         }
     }
 
-    ILI9341_DrawImage_DMA_1D(
+    DISPLAY_DrawImage_DMA_1D(
         (uint16_t)rect.x0,
         (uint16_t)rect.y0,
         width,
@@ -225,23 +225,23 @@ static void MarbleMazeRender_DrawHud(
     const MarbleMazeState *game) {
     char text[20];
 
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         0, 0, MARBLE_MAZE_SCREEN_WIDTH,
-        MARBLE_MAZE_PLAYFIELD_TOP, ILI9341_BLACK);
-    ILI9341_FillRectangle_DMA(
+        MARBLE_MAZE_PLAYFIELD_TOP, DISPLAY_BLACK);
+    DISPLAY_FillRectangle_DMA(
         0, MARBLE_MAZE_PLAYFIELD_TOP - 1,
-        MARBLE_MAZE_SCREEN_WIDTH, 1, ILI9341_GRAY);
-    ILI9341_WriteString_DMA(
+        MARBLE_MAZE_SCREEN_WIDTH, 1, DISPLAY_GRAY);
+    DISPLAY_WriteString_DMA(
         4, 4, "MARBLE MAZE", Font_11x18,
-        ILI9341_WHITE, ILI9341_BLACK);
+        DISPLAY_WHITE, DISPLAY_BLACK);
     snprintf(text, sizeof(text), "LEVEL %u",
              (unsigned int)game->level);
-    ILI9341_WriteString_DMA(
+    DISPLAY_WriteString_DMA(
         154, 4, text, Font_11x18,
-        ILI9341_CYAN, ILI9341_BLACK);
-    ILI9341_WriteString_DMA(
+        DISPLAY_CYAN, DISPLAY_BLACK);
+    DISPLAY_WriteString_DMA(
         264, 9, "GOAL", Font_7x10,
-        ILI9341_GREEN, ILI9341_BLACK);
+        DISPLAY_GREEN, DISPLAY_BLACK);
 }
 
 static void MarbleMazeRender_DrawWalls(
@@ -261,24 +261,24 @@ static void MarbleMazeRender_DrawWalls(
 
             if ((game->walls[cell] &
                  MARBLE_MAZE_WALL_NORTH) != 0U) {
-                ILI9341_FillRectangle_DMA(
+                DISPLAY_FillRectangle_DMA(
                     cell_x, cell_y,
                     MARBLE_MAZE_CELL_SIZE,
                     MARBLE_MAZE_WALL_THICKNESS,
                     MAZE_WALL_COLOR);
-                ILI9341_FillRectangle_DMA(
+                DISPLAY_FillRectangle_DMA(
                     cell_x, cell_y,
                     MARBLE_MAZE_CELL_SIZE,
                     1, MAZE_WALL_HIGHLIGHT);
             }
             if ((game->walls[cell] &
                  MARBLE_MAZE_WALL_WEST) != 0U) {
-                ILI9341_FillRectangle_DMA(
+                DISPLAY_FillRectangle_DMA(
                     cell_x, cell_y,
                     MARBLE_MAZE_WALL_THICKNESS,
                     MARBLE_MAZE_CELL_SIZE,
                     MAZE_WALL_COLOR);
-                ILI9341_FillRectangle_DMA(
+                DISPLAY_FillRectangle_DMA(
                     cell_x, cell_y, 1,
                     MARBLE_MAZE_CELL_SIZE,
                     MAZE_WALL_HIGHLIGHT);
@@ -286,7 +286,7 @@ static void MarbleMazeRender_DrawWalls(
             if ((column + 1U == MARBLE_MAZE_COLUMNS) &&
                 ((game->walls[cell] &
                   MARBLE_MAZE_WALL_EAST) != 0U)) {
-                ILI9341_FillRectangle_DMA(
+                DISPLAY_FillRectangle_DMA(
                     cell_x + MARBLE_MAZE_CELL_SIZE,
                     cell_y,
                     MARBLE_MAZE_WALL_THICKNESS,
@@ -297,7 +297,7 @@ static void MarbleMazeRender_DrawWalls(
             if ((row + 1U == MARBLE_MAZE_ROWS) &&
                 ((game->walls[cell] &
                   MARBLE_MAZE_WALL_SOUTH) != 0U)) {
-                ILI9341_FillRectangle_DMA(
+                DISPLAY_FillRectangle_DMA(
                     cell_x,
                     cell_y + MARBLE_MAZE_CELL_SIZE,
                     MARBLE_MAZE_CELL_SIZE +
@@ -322,15 +322,15 @@ static void MarbleMazeRender_DrawWholeLevel(
         ball_y + MARBLE_MAZE_BALL_RADIUS
     };
 
-    ILI9341_FillScreen_DMA(
+    DISPLAY_FillScreen_DMA(
         MarbleMazeRender_Background(game));
     MarbleMazeRender_DrawWalls(game);
-    ILI9341_FillCircle_DMA(
+    DISPLAY_FillCircle_DMA(
         (uint16_t)goal_x, (uint16_t)goal_y,
         MARBLE_MAZE_GOAL_RADIUS, MAZE_GOAL_COLOR);
-    ILI9341_FillCircle_DMA(
+    DISPLAY_FillCircle_DMA(
         (uint16_t)goal_x, (uint16_t)goal_y,
-        3, ILI9341_WHITE);
+        3, DISPLAY_WHITE);
     MarbleMazeRender_DrawHud(game);
     MarbleMazeRender_DrawPatch(
         game, ball_x, ball_y, ball_rect);

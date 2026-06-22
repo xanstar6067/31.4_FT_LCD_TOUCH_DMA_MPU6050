@@ -22,12 +22,12 @@ typedef struct {
 } RenderRect;
 
 static const uint16_t background_colors[] = {
-    ILI9341_COLOR565(5, 12, 24),
-    ILI9341_COLOR565(18, 7, 25),
-    ILI9341_COLOR565(4, 22, 18),
-    ILI9341_COLOR565(24, 12, 4),
-    ILI9341_COLOR565(8, 8, 30),
-    ILI9341_COLOR565(22, 5, 12)
+    DISPLAY_COLOR565(5, 12, 24),
+    DISPLAY_COLOR565(18, 7, 25),
+    DISPLAY_COLOR565(4, 22, 18),
+    DISPLAY_COLOR565(24, 12, 4),
+    DISPLAY_COLOR565(8, 8, 30),
+    DISPLAY_COLOR565(22, 5, 12)
 };
 
 #define patch_buffer render_scratch_buffer
@@ -118,9 +118,9 @@ static uint16_t Render_StaticPixel(const OrbHuntState *game,
         if (Render_PointInCircle(x, y, target->x, target->y,
                                  ORB_HUNT_TARGET_RADIUS) != 0U) {
             if (Render_PointInCircle(x, y, target->x, target->y, 3) != 0U) {
-                return ILI9341_WHITE;
+                return DISPLAY_WHITE;
             }
-            return ILI9341_YELLOW;
+            return DISPLAY_YELLOW;
         }
     }
     return Render_BackgroundColor(game);
@@ -135,9 +135,9 @@ static uint16_t Render_ComposedPixel(const OrbHuntState *game,
                              ORB_HUNT_BALL_RADIUS) != 0U) {
         if (Render_PointInCircle(x, y,
                                  ball_x - 5, ball_y - 5, 4) != 0U) {
-            return ILI9341_WHITE;
+            return DISPLAY_WHITE;
         }
-        return ILI9341_RED;
+        return DISPLAY_RED;
     }
     return Render_StaticPixel(game, x, y);
 }
@@ -168,7 +168,7 @@ static uint8_t Render_DrawPatch(const OrbHuntState *game,
         }
     }
 
-    ILI9341_DrawImage_DMA_1D((uint16_t)rect.x0,
+    DISPLAY_DrawImage_DMA_1D((uint16_t)rect.x0,
                              (uint16_t)rect.y0,
                              width,
                              height,
@@ -179,23 +179,23 @@ static uint8_t Render_DrawPatch(const OrbHuntState *game,
 static void Render_DrawHud(const OrbHuntState *game) {
     char text[20];
 
-    ILI9341_FillRectangle_DMA(0, 0, ORB_HUNT_SCREEN_WIDTH,
-                              RENDER_HUD_HEIGHT, ILI9341_BLACK);
-    ILI9341_FillRectangle_DMA(0, RENDER_HUD_LINE_Y,
-                              ORB_HUNT_SCREEN_WIDTH, 1, ILI9341_GRAY);
+    DISPLAY_FillRectangle_DMA(0, 0, ORB_HUNT_SCREEN_WIDTH,
+                              RENDER_HUD_HEIGHT, DISPLAY_BLACK);
+    DISPLAY_FillRectangle_DMA(0, RENDER_HUD_LINE_Y,
+                              ORB_HUNT_SCREEN_WIDTH, 1, DISPLAY_GRAY);
 
-    ILI9341_WriteString_DMA(4, 4, "ORB HUNT", Font_11x18,
-                            ILI9341_WHITE, ILI9341_BLACK);
+    DISPLAY_WriteString_DMA(4, 4, "ORB HUNT", Font_11x18,
+                            DISPLAY_WHITE, DISPLAY_BLACK);
 
     snprintf(text, sizeof(text), "L%u",
              (unsigned int)game->level.number);
-    ILI9341_WriteString_DMA(108, 4, text, Font_11x18,
-                            ILI9341_CYAN, ILI9341_BLACK);
+    DISPLAY_WriteString_DMA(108, 4, text, Font_11x18,
+                            DISPLAY_CYAN, DISPLAY_BLACK);
 
     snprintf(text, sizeof(text), "LEFT %u",
              (unsigned int)OrbHunt_TargetsRemaining(game));
-    ILI9341_WriteString_DMA(232, 4, text, Font_11x18,
-                            ILI9341_YELLOW, ILI9341_BLACK);
+    DISPLAY_WriteString_DMA(232, 4, text, Font_11x18,
+                            DISPLAY_YELLOW, DISPLAY_BLACK);
 }
 
 static void Render_DrawWholeLevel(const OrbHuntState *game) {
@@ -208,20 +208,20 @@ static void Render_DrawWholeLevel(const OrbHuntState *game) {
         ball_y + ORB_HUNT_BALL_RADIUS
     };
 
-    ILI9341_FillScreen_DMA(Render_BackgroundColor(game));
+    DISPLAY_FillScreen_DMA(Render_BackgroundColor(game));
 
     for (uint8_t i = 0U; i < game->level.target_count; i++) {
         const OrbHuntTarget *target = &game->level.targets[i];
 
         if (target->active != 0U) {
-            ILI9341_FillCircle_DMA((uint16_t)target->x,
+            DISPLAY_FillCircle_DMA((uint16_t)target->x,
                                    (uint16_t)target->y,
                                    ORB_HUNT_TARGET_RADIUS,
-                                   ILI9341_YELLOW);
-            ILI9341_FillCircle_DMA((uint16_t)target->x,
+                                   DISPLAY_YELLOW);
+            DISPLAY_FillCircle_DMA((uint16_t)target->x,
                                    (uint16_t)target->y,
                                    3,
-                                   ILI9341_WHITE);
+                                   DISPLAY_WHITE);
         }
     }
 

@@ -20,9 +20,4 @@ void ST7789_TouchUnselect(void);
 bool ST7789_TouchPressed(void);
 bool ST7789_TouchGetCoordinates(uint16_t* x, uint16_t* y);
 
-/* Compatibility layer for existing touch/UI code. */
-#define ILI9341_TouchUnselect ST7789_TouchUnselect
-#define ILI9341_TouchPressed ST7789_TouchPressed
-#define ILI9341_TouchGetCoordinates ST7789_TouchGetCoordinates
-
 #endif // __ST7789_TOUCH_H__

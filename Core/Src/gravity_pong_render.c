@@ -8,13 +8,13 @@
 #define PONG_RENDER_PATCH_HEIGHT     32
 #define PONG_RENDER_CORE_GLOW        14
 
-#define PONG_BACKGROUND_COLOR        ILI9341_COLOR565(3, 8, 18)
-#define PONG_CENTER_LINE_COLOR       ILI9341_COLOR565(18, 35, 52)
-#define PONG_CORE_OUTER_COLOR        ILI9341_PURPLE
-#define PONG_CORE_INNER_COLOR        ILI9341_DARK_BLUE
-#define PONG_PLAYER_COLOR            ILI9341_GREEN
-#define PONG_AI_COLOR                ILI9341_ORANGE
-#define PONG_BALL_COLOR              ILI9341_CYAN
+#define PONG_BACKGROUND_COLOR        DISPLAY_COLOR565(3, 8, 18)
+#define PONG_CENTER_LINE_COLOR       DISPLAY_COLOR565(18, 35, 52)
+#define PONG_CORE_OUTER_COLOR        DISPLAY_PURPLE
+#define PONG_CORE_INNER_COLOR        DISPLAY_DARK_BLUE
+#define PONG_PLAYER_COLOR            DISPLAY_GREEN
+#define PONG_AI_COLOR                DISPLAY_ORANGE
+#define PONG_BALL_COLOR              DISPLAY_CYAN
 
 #if (PONG_RENDER_PATCH_WIDTH * PONG_RENDER_PATCH_HEIGHT * 2U) > \
     RENDER_SCRATCH_BUFFER_SIZE
@@ -69,7 +69,7 @@ static uint16_t PongRender_StaticPixel(int16_t x, int16_t y) {
                                      GRAVITY_PONG_CORE_X,
                                      GRAVITY_PONG_CORE_Y,
                                      4) != 0U) {
-            return ILI9341_WHITE;
+            return DISPLAY_WHITE;
         }
         if (PongRender_PointInCircle(x, y,
                                      GRAVITY_PONG_CORE_X,
@@ -100,7 +100,7 @@ static uint16_t PongRender_ComposedPixel(const GravityPongState *game,
                                  GRAVITY_PONG_BALL_RADIUS) != 0U) {
         if (PongRender_PointInCircle(x, y,
                                      ball_x - 2, ball_y - 2, 1) != 0U) {
-            return ILI9341_WHITE;
+            return DISPLAY_WHITE;
         }
         return PONG_BALL_COLOR;
     }
@@ -171,7 +171,7 @@ static uint8_t PongRender_DrawPatch(const GravityPongState *game,
         }
     }
 
-    ILI9341_DrawImage_DMA_1D((uint16_t)rect.x0,
+    DISPLAY_DrawImage_DMA_1D((uint16_t)rect.x0,
                              (uint16_t)rect.y0,
                              width,
                              height,
@@ -182,32 +182,32 @@ static uint8_t PongRender_DrawPatch(const GravityPongState *game,
 static void PongRender_DrawHud(const GravityPongState *game) {
     char score[16];
 
-    ILI9341_FillRectangle_DMA(0, 0,
+    DISPLAY_FillRectangle_DMA(0, 0,
                               GRAVITY_PONG_SCREEN_WIDTH,
                               GRAVITY_PONG_PLAYFIELD_TOP,
-                              ILI9341_BLACK);
-    ILI9341_FillRectangle_DMA(0,
+                              DISPLAY_BLACK);
+    DISPLAY_FillRectangle_DMA(0,
                               GRAVITY_PONG_PLAYFIELD_TOP - 1,
                               GRAVITY_PONG_SCREEN_WIDTH,
                               1,
-                              ILI9341_GRAY);
-    ILI9341_WriteString_DMA(4, 4, "GRAVITY PONG", Font_11x18,
-                            ILI9341_WHITE, ILI9341_BLACK);
+                              DISPLAY_GRAY);
+    DISPLAY_WriteString_DMA(4, 4, "GRAVITY PONG", Font_11x18,
+                            DISPLAY_WHITE, DISPLAY_BLACK);
 
     snprintf(score, sizeof(score), "YOU %u:%u CPU",
              (unsigned int)game->player_score,
              (unsigned int)game->ai_score);
-    ILI9341_WriteString_DMA(188, 4, score, Font_11x18,
-                            ILI9341_YELLOW, ILI9341_BLACK);
+    DISPLAY_WriteString_DMA(188, 4, score, Font_11x18,
+                            DISPLAY_YELLOW, DISPLAY_BLACK);
 }
 
 static void PongRender_DrawStaticField(void) {
-    ILI9341_FillScreen_DMA(PONG_BACKGROUND_COLOR);
+    DISPLAY_FillScreen_DMA(PONG_BACKGROUND_COLOR);
 
     for (uint16_t y = GRAVITY_PONG_PLAYFIELD_TOP;
          y < GRAVITY_PONG_SCREEN_HEIGHT;
          y += 12U) {
-        ILI9341_FillRectangle_DMA(
+        DISPLAY_FillRectangle_DMA(
             GRAVITY_PONG_SCREEN_WIDTH / 2 - 1,
             y,
             2,
@@ -215,38 +215,38 @@ static void PongRender_DrawStaticField(void) {
             PONG_CENTER_LINE_COLOR);
     }
 
-    ILI9341_FillCircle_DMA(GRAVITY_PONG_CORE_X,
+    DISPLAY_FillCircle_DMA(GRAVITY_PONG_CORE_X,
                            GRAVITY_PONG_CORE_Y,
                            PONG_RENDER_CORE_GLOW,
                            PONG_CORE_OUTER_COLOR);
-    ILI9341_FillCircle_DMA(GRAVITY_PONG_CORE_X,
+    DISPLAY_FillCircle_DMA(GRAVITY_PONG_CORE_X,
                            GRAVITY_PONG_CORE_Y,
                            GRAVITY_PONG_CORE_RADIUS,
                            PONG_CORE_INNER_COLOR);
-    ILI9341_FillCircle_DMA(GRAVITY_PONG_CORE_X,
+    DISPLAY_FillCircle_DMA(GRAVITY_PONG_CORE_X,
                            GRAVITY_PONG_CORE_Y,
                            4,
-                           ILI9341_WHITE);
+                           DISPLAY_WHITE);
 }
 
 static void PongRender_DrawPauseMessage(const GravityPongState *game) {
     const char *message = "READY";
     uint16_t x = 120U;
-    uint16_t color = ILI9341_CYAN;
+    uint16_t color = DISPLAY_CYAN;
 
     if (game->phase == GRAVITY_PONG_PHASE_MATCH_PAUSE) {
         if (game->match_winner == 1U) {
             message = "YOU WIN";
             x = 104U;
-            color = ILI9341_GREEN;
+            color = DISPLAY_GREEN;
         } else {
             message = "CPU WINS";
             x = 96U;
-            color = ILI9341_ORANGE;
+            color = DISPLAY_ORANGE;
         }
     }
 
-    ILI9341_WriteString_DMA(x, 82, message, Font_16x26,
+    DISPLAY_WriteString_DMA(x, 82, message, Font_16x26,
                             color, PONG_BACKGROUND_COLOR);
 }
 
@@ -259,17 +259,17 @@ static void PongRender_DrawWholeField(const GravityPongState *game) {
     PongRender_DrawStaticField();
     PongRender_DrawHud(game);
 
-    ILI9341_FillRectangle_DMA((uint16_t)player_x,
+    DISPLAY_FillRectangle_DMA((uint16_t)player_x,
                               GRAVITY_PONG_PLAYER_Y,
                               game->player.width,
                               GRAVITY_PONG_PADDLE_HEIGHT,
                               PONG_PLAYER_COLOR);
-    ILI9341_FillRectangle_DMA((uint16_t)ai_x,
+    DISPLAY_FillRectangle_DMA((uint16_t)ai_x,
                               GRAVITY_PONG_AI_Y,
                               game->ai.width,
                               GRAVITY_PONG_PADDLE_HEIGHT,
                               PONG_AI_COLOR);
-    ILI9341_FillCircle_DMA((uint16_t)ball_x,
+    DISPLAY_FillCircle_DMA((uint16_t)ball_x,
                            (uint16_t)ball_y,
                            GRAVITY_PONG_BALL_RADIUS,
                            PONG_BALL_COLOR);

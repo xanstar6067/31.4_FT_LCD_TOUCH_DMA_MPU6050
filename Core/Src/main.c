@@ -118,10 +118,10 @@ static void Arcade_ProcessButton(void) {
 void init(void) {
     MPU6000_Data_t seed_data;
 
-    ILI9341_Unselect();
-    ILI9341_TouchUnselect();
+    DISPLAY_Unselect();
+    DISPLAY_TouchUnselect();
     W25Qxx_Unselect();
-    ILI9341_Init();
+    DISPLAY_Init();
     MPU6000_Init();
     MPU6000_ReadData(&seed_data);
 
@@ -447,10 +447,12 @@ static void MX_GPIO_Init(void) {
   HAL_GPIO_WritePin(ST7789_BL_GPIO_Port, ST7789_BL_Pin, ST7789_BL_OFF_STATE);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, ILI9341_DC_Pin|ILI9341_RES_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(DISPLAY_DC_GPIO_Port, DISPLAY_DC_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(DISPLAY_RES_GPIO_Port, DISPLAY_RES_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, ILI9341_CS_Pin|ILI9341_TOUCH_CS_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(DISPLAY_TOUCH_CS_GPIO_Port, DISPLAY_TOUCH_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : LED_Pin */
   GPIO_InitStruct.Pin = LED_Pin;
@@ -472,18 +474,24 @@ static void MX_GPIO_Init(void) {
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(ST7789_BL_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : ILI9341_TOUCH_IRQ_Pin */
-  GPIO_InitStruct.Pin = ILI9341_TOUCH_IRQ_Pin;
+  /*Configure GPIO pin : DISPLAY_TOUCH_IRQ_Pin */
+  GPIO_InitStruct.Pin = DISPLAY_TOUCH_IRQ_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(ILI9341_TOUCH_IRQ_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(DISPLAY_TOUCH_IRQ_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ILI9341_DC_Pin ILI9341_RES_Pin ILI9341_CS_Pin ILI9341_TOUCH_CS_Pin */
-  GPIO_InitStruct.Pin = ILI9341_DC_Pin|ILI9341_RES_Pin|ILI9341_CS_Pin|ILI9341_TOUCH_CS_Pin;
+  /*Configure GPIO pins : DISPLAY_DC_Pin DISPLAY_RES_Pin DISPLAY_CS_Pin DISPLAY_TOUCH_CS_Pin */
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = DISPLAY_DC_Pin;
+  HAL_GPIO_Init(DISPLAY_DC_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = DISPLAY_RES_Pin;
+  HAL_GPIO_Init(DISPLAY_RES_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = DISPLAY_CS_Pin;
+  HAL_GPIO_Init(DISPLAY_CS_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = DISPLAY_TOUCH_CS_Pin;
+  HAL_GPIO_Init(DISPLAY_TOUCH_CS_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
@@ -496,12 +504,12 @@ static void MX_GPIO_Init(void) {
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(W25Q_CS_GPIO_Port, &GPIO_InitStruct);
 
-  HAL_GPIO_WritePin(ST7789_CS_GPIO_Port, ST7789_CS_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(ILI9341_TOUCH_CS_GPIO_Port,
-                    ILI9341_TOUCH_CS_Pin,
+  HAL_GPIO_WritePin(DISPLAY_CS_GPIO_Port, DISPLAY_CS_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(DISPLAY_TOUCH_CS_GPIO_Port,
+                    DISPLAY_TOUCH_CS_Pin,
                     GPIO_PIN_SET);
   HAL_GPIO_WritePin(W25Q_CS_GPIO_Port, W25Q_CS_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(ST7789_RES_GPIO_Port, ST7789_RES_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(DISPLAY_RES_GPIO_Port, DISPLAY_RES_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(ST7789_BL_GPIO_Port, ST7789_BL_Pin, ST7789_BL_OFF_STATE);
   /* USER CODE END MX_GPIO_Init_2 */
 }

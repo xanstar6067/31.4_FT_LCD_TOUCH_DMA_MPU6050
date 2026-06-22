@@ -6,12 +6,12 @@
 
 #define SHAKE_RENDER_PATCH_SIZE       36
 
-#define SHAKE_SKY_COLOR               ILI9341_COLOR565(4, 18, 33)
-#define SHAKE_GROUND_COLOR            ILI9341_COLOR565(70, 120, 45)
-#define SHAKE_GROUND_DARK             ILI9341_COLOR565(40, 80, 36)
-#define SHAKE_PIPE_COLOR              ILI9341_COLOR565(30, 190, 70)
-#define SHAKE_BIRD_COLOR              ILI9341_YELLOW
-#define SHAKE_BIRD_WING               ILI9341_ORANGE
+#define SHAKE_SKY_COLOR               DISPLAY_COLOR565(4, 18, 33)
+#define SHAKE_GROUND_COLOR            DISPLAY_COLOR565(70, 120, 45)
+#define SHAKE_GROUND_DARK             DISPLAY_COLOR565(40, 80, 36)
+#define SHAKE_PIPE_COLOR              DISPLAY_COLOR565(30, 190, 70)
+#define SHAKE_BIRD_COLOR              DISPLAY_YELLOW
+#define SHAKE_BIRD_WING               DISPLAY_ORANGE
 
 #if (SHAKE_RENDER_PATCH_SIZE * SHAKE_RENDER_PATCH_SIZE * 2U) > \
     RENDER_SCRATCH_BUFFER_SIZE
@@ -128,7 +128,7 @@ static void ShakeRender_FillRectClipped(
     if ((y + height) > SHAKE_FLIGHT_SCREEN_HEIGHT) {
         height = SHAKE_FLIGHT_SCREEN_HEIGHT - y;
     }
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         (uint16_t)x, (uint16_t)y,
         (uint16_t)width, (uint16_t)height,
         color);
@@ -272,7 +272,7 @@ static void ShakeRender_DrawBirdToPatch(
                     x, y,
                     SHAKE_FLIGHT_BIRD_X + 3,
                     bird_y - 3, 1) != 0U) {
-                color = ILI9341_WHITE;
+                color = DISPLAY_WHITE;
             }
             ShakeRender_PutPixel(
                 rect, width, height, x, y, color);
@@ -311,7 +311,7 @@ static uint8_t ShakeRender_DrawBirdPatch(
 
     ShakeRender_DrawPipesToPatch(game, rect, width, height);
     ShakeRender_DrawBirdToPatch(game, rect, width, height);
-    ILI9341_DrawImage_DMA_1D(
+    DISPLAY_DrawImage_DMA_1D(
         (uint16_t)rect.x0,
         (uint16_t)rect.y0,
         width,
@@ -323,34 +323,34 @@ static uint8_t ShakeRender_DrawBirdPatch(
 static void ShakeRender_DrawHud(const ShakeFlightState *game) {
     char text[24];
 
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         0, 0, SHAKE_FLIGHT_SCREEN_WIDTH,
-        SHAKE_FLIGHT_PLAYFIELD_TOP, ILI9341_BLACK);
-    ILI9341_FillRectangle_DMA(
+        SHAKE_FLIGHT_PLAYFIELD_TOP, DISPLAY_BLACK);
+    DISPLAY_FillRectangle_DMA(
         0, SHAKE_FLIGHT_PLAYFIELD_TOP - 1,
-        SHAKE_FLIGHT_SCREEN_WIDTH, 1, ILI9341_GRAY);
-    ILI9341_WriteString_DMA(
+        SHAKE_FLIGHT_SCREEN_WIDTH, 1, DISPLAY_GRAY);
+    DISPLAY_WriteString_DMA(
         4, 4, "SHAKE FLIGHT", Font_11x18,
-        ILI9341_WHITE, ILI9341_BLACK);
+        DISPLAY_WHITE, DISPLAY_BLACK);
     snprintf(text, sizeof(text), "L%u %04lu",
              (unsigned int)game->level,
              (unsigned long)game->score);
-    ILI9341_WriteString_DMA(
+    DISPLAY_WriteString_DMA(
         180, 9, text, Font_7x10,
-        ILI9341_CYAN, ILI9341_BLACK);
-    ILI9341_WriteString_DMA(
+        DISPLAY_CYAN, DISPLAY_BLACK);
+    DISPLAY_WriteString_DMA(
         268, 9, "Z SHAKE", Font_7x10,
-        ILI9341_YELLOW, ILI9341_BLACK);
+        DISPLAY_YELLOW, DISPLAY_BLACK);
 }
 
 static void ShakeRender_DrawStaticField(void) {
-    ILI9341_FillScreen_DMA(SHAKE_SKY_COLOR);
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillScreen_DMA(SHAKE_SKY_COLOR);
+    DISPLAY_FillRectangle_DMA(
         0, SHAKE_FLIGHT_GROUND_Y,
         SHAKE_FLIGHT_SCREEN_WIDTH,
         SHAKE_FLIGHT_SCREEN_HEIGHT - SHAKE_FLIGHT_GROUND_Y,
         SHAKE_GROUND_COLOR);
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         0, SHAKE_FLIGHT_GROUND_Y,
         SHAKE_FLIGHT_SCREEN_WIDTH, 2,
         SHAKE_GROUND_DARK);
@@ -396,12 +396,12 @@ static void ShakeRender_DrawWholeField(
     ShakeRender_DrawBirdPatch(game, bird_rect);
 
     if (game->phase == SHAKE_FLIGHT_PHASE_RECOVERY) {
-        ILI9341_WriteString_DMA(
+        DISPLAY_WriteString_DMA(
             94, 92, "CRASH", Font_16x26,
-            ILI9341_ORANGE, SHAKE_SKY_COLOR);
-        ILI9341_WriteString_DMA(
+            DISPLAY_ORANGE, SHAKE_SKY_COLOR);
+        DISPLAY_WriteString_DMA(
             96, 126, "AUTO RESTART", Font_7x10,
-            ILI9341_CYAN, SHAKE_SKY_COLOR);
+            DISPLAY_CYAN, SHAKE_SKY_COLOR);
     }
 
     ShakeRender_SaveSnapshots(game);

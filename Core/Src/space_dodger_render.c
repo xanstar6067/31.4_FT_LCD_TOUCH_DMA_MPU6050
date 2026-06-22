@@ -10,15 +10,15 @@
 #define DODGER_STAR_COLUMNS            10U
 #define DODGER_STAR_ROWS               7U
 
-#define DODGER_BACKGROUND_COLOR        ILI9341_COLOR565(2, 5, 15)
-#define DODGER_STAR_DIM_COLOR          ILI9341_COLOR565(75, 100, 145)
-#define DODGER_SHIP_COLOR              ILI9341_COLOR565(80, 210, 245)
-#define DODGER_SHIP_EDGE_COLOR         ILI9341_WHITE
-#define DODGER_COCKPIT_COLOR           ILI9341_CYAN
-#define DODGER_BULLET_COLOR            ILI9341_YELLOW
-#define DODGER_ASTEROID_COLOR          ILI9341_COLOR565(145, 110, 85)
-#define DODGER_ASTEROID_DAMAGED_COLOR  ILI9341_COLOR565(190, 90, 55)
-#define DODGER_CRATER_COLOR            ILI9341_COLOR565(65, 48, 45)
+#define DODGER_BACKGROUND_COLOR        DISPLAY_COLOR565(2, 5, 15)
+#define DODGER_STAR_DIM_COLOR          DISPLAY_COLOR565(75, 100, 145)
+#define DODGER_SHIP_COLOR              DISPLAY_COLOR565(80, 210, 245)
+#define DODGER_SHIP_EDGE_COLOR         DISPLAY_WHITE
+#define DODGER_COCKPIT_COLOR           DISPLAY_CYAN
+#define DODGER_BULLET_COLOR            DISPLAY_YELLOW
+#define DODGER_ASTEROID_COLOR          DISPLAY_COLOR565(145, 110, 85)
+#define DODGER_ASTEROID_DAMAGED_COLOR  DISPLAY_COLOR565(190, 90, 55)
+#define DODGER_CRATER_COLOR            DISPLAY_COLOR565(65, 48, 45)
 
 #if (DODGER_RENDER_PATCH_SIZE * DODGER_RENDER_PATCH_SIZE * 2U) > \
     RENDER_SCRATCH_BUFFER_SIZE
@@ -297,7 +297,7 @@ static void DodgerRender_DrawStarsToPatch(
             DodgerRender_PutPixel(
                 rect, width, height, x, y,
                 (bright >= 2U) ?
-                ILI9341_WHITE : DODGER_STAR_DIM_COLOR);
+                DISPLAY_WHITE : DODGER_STAR_DIM_COLOR);
         }
     }
 }
@@ -356,7 +356,7 @@ static void DodgerRender_DrawAsteroidsToPatch(
             rect, width, height,
             asteroid_x - (asteroid->radius / 3),
             asteroid_y - (asteroid->radius / 3),
-            1, ILI9341_WHITE);
+            1, DISPLAY_WHITE);
     }
 }
 
@@ -389,7 +389,7 @@ static void DodgerRender_DrawBulletsToPatch(
                 DodgerRender_PutPixel(
                     rect, width, height, x, y,
                     ((x == bullet_x) && (y <= bullet_y)) ?
-                    ILI9341_WHITE : DODGER_BULLET_COLOR);
+                    DISPLAY_WHITE : DODGER_BULLET_COLOR);
             }
         }
     }
@@ -459,7 +459,7 @@ static uint8_t DodgerRender_DrawPatch(
     DodgerRender_DrawShipToPatch(
         game, rect, width, height);
 
-    ILI9341_DrawImage_DMA_1D(
+    DISPLAY_DrawImage_DMA_1D(
         (uint16_t)rect.x0,
         (uint16_t)rect.y0,
         width,
@@ -479,20 +479,20 @@ static void DodgerRender_DrawStars(const SpaceDodgerState *game) {
 
             DodgerRender_StarPosition(game, column, row,
                                       &x, &y, &bright);
-            ILI9341_FillRectangle_DMA(
+            DISPLAY_FillRectangle_DMA(
                 (uint16_t)x, (uint16_t)y, 1, 1,
                 (bright >= 2U) ?
-                ILI9341_WHITE : DODGER_STAR_DIM_COLOR);
+                DISPLAY_WHITE : DODGER_STAR_DIM_COLOR);
             if (bright == 3U) {
-                ILI9341_FillRectangle_DMA(
+                DISPLAY_FillRectangle_DMA(
                     (uint16_t)(x - 1), (uint16_t)y,
                     3, 1, DODGER_STAR_DIM_COLOR);
-                ILI9341_FillRectangle_DMA(
+                DISPLAY_FillRectangle_DMA(
                     (uint16_t)x, (uint16_t)(y - 1),
                     1, 3, DODGER_STAR_DIM_COLOR);
-                ILI9341_FillRectangle_DMA(
+                DISPLAY_FillRectangle_DMA(
                     (uint16_t)x, (uint16_t)y,
-                    1, 1, ILI9341_WHITE);
+                    1, 1, DISPLAY_WHITE);
             }
         }
     }
@@ -501,29 +501,29 @@ static void DodgerRender_DrawStars(const SpaceDodgerState *game) {
 static void DodgerRender_DrawHud(const SpaceDodgerState *game) {
     char status[24];
 
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         0, 0, SPACE_DODGER_SCREEN_WIDTH,
-        SPACE_DODGER_PLAYFIELD_TOP, ILI9341_BLACK);
-    ILI9341_FillRectangle_DMA(
+        SPACE_DODGER_PLAYFIELD_TOP, DISPLAY_BLACK);
+    DISPLAY_FillRectangle_DMA(
         0, SPACE_DODGER_PLAYFIELD_TOP - 1,
-        SPACE_DODGER_SCREEN_WIDTH, 1, ILI9341_GRAY);
-    ILI9341_WriteString_DMA(
+        SPACE_DODGER_SCREEN_WIDTH, 1, DISPLAY_GRAY);
+    DISPLAY_WriteString_DMA(
         4, 4, "SPACE DODGER", Font_11x18,
-        ILI9341_WHITE, ILI9341_BLACK);
+        DISPLAY_WHITE, DISPLAY_BLACK);
 
     snprintf(status, sizeof(status), "L%u %05lu",
              (unsigned int)game->level,
              (unsigned long)game->score);
-    ILI9341_WriteString_DMA(
+    DISPLAY_WriteString_DMA(
         154, 9, status, Font_7x10,
-        ILI9341_CYAN, ILI9341_BLACK);
+        DISPLAY_CYAN, DISPLAY_BLACK);
     snprintf(status, sizeof(status), "SH %u",
              (unsigned int)game->shields);
-    ILI9341_WriteString_DMA(
+    DISPLAY_WriteString_DMA(
         280, 9, status, Font_7x10,
         (game->shields > 1U) ?
-        ILI9341_GREEN : ILI9341_ORANGE,
-        ILI9341_BLACK);
+        DISPLAY_GREEN : DISPLAY_ORANGE,
+        DISPLAY_BLACK);
 }
 
 static void DodgerRender_SaveSnapshots(
@@ -594,18 +594,18 @@ static void DodgerRender_DrawObjects(
 
 static void DodgerRender_DrawWholeField(
     const SpaceDodgerState *game) {
-    ILI9341_FillScreen_DMA(DODGER_BACKGROUND_COLOR);
+    DISPLAY_FillScreen_DMA(DODGER_BACKGROUND_COLOR);
     DodgerRender_DrawStars(game);
     DodgerRender_DrawHud(game);
     DodgerRender_DrawObjects(game);
 
     if (game->phase == SPACE_DODGER_PHASE_RESTART_PAUSE) {
-        ILI9341_WriteString_DMA(
+        DISPLAY_WriteString_DMA(
             88, 92, "SHIP LOST", Font_16x26,
-            ILI9341_ORANGE, DODGER_BACKGROUND_COLOR);
-        ILI9341_WriteString_DMA(
+            DISPLAY_ORANGE, DODGER_BACKGROUND_COLOR);
+        DISPLAY_WriteString_DMA(
             111, 126, "AUTO RESTART", Font_7x10,
-            ILI9341_CYAN, DODGER_BACKGROUND_COLOR);
+            DISPLAY_CYAN, DODGER_BACKGROUND_COLOR);
     }
 
     DodgerRender_SaveSnapshots(game);

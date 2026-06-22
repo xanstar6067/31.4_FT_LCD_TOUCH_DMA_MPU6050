@@ -5,13 +5,13 @@
 #include <string.h>
 #include "display_driver.h"
 
-#define TOUCH_TEST_BACKGROUND       ILI9341_COLOR565(5, 8, 14)
-#define TOUCH_TEST_PANEL            ILI9341_COLOR565(12, 20, 29)
-#define TOUCH_TEST_FIELD            ILI9341_COLOR565(6, 14, 20)
-#define TOUCH_TEST_GRID             ILI9341_COLOR565(25, 54, 66)
-#define TOUCH_TEST_BORDER           ILI9341_COLOR565(55, 92, 112)
-#define TOUCH_TEST_TARGET           ILI9341_ORANGE
-#define TOUCH_TEST_MARKER           ILI9341_GREEN
+#define TOUCH_TEST_BACKGROUND       DISPLAY_COLOR565(5, 8, 14)
+#define TOUCH_TEST_PANEL            DISPLAY_COLOR565(12, 20, 29)
+#define TOUCH_TEST_FIELD            DISPLAY_COLOR565(6, 14, 20)
+#define TOUCH_TEST_GRID             DISPLAY_COLOR565(25, 54, 66)
+#define TOUCH_TEST_BORDER           DISPLAY_COLOR565(55, 92, 112)
+#define TOUCH_TEST_TARGET           DISPLAY_ORANGE
+#define TOUCH_TEST_MARKER           DISPLAY_GREEN
 #define TOUCH_TEST_FIELD_X          8U
 #define TOUCH_TEST_FIELD_Y          84U
 #define TOUCH_TEST_FIELD_W          216U
@@ -28,14 +28,14 @@ static uint8_t touch_patch_buffer[TOUCH_TEST_PATCH_SIZE *
                                   TOUCH_TEST_PATCH_SIZE * 2U];
 
 static const char *TouchTestPage_OrientationName(void) {
-    switch (ili9341_orientation) {
-        case ILI9341_ORIENTATION_PORTRAIT:
+    switch (display_orientation) {
+        case DISPLAY_ORIENTATION_PORTRAIT:
             return "PORTRAIT";
-        case ILI9341_ORIENTATION_PORTRAIT_UPSIDE:
+        case DISPLAY_ORIENTATION_PORTRAIT_UPSIDE:
             return "PORTRAIT_UP";
-        case ILI9341_ORIENTATION_LANDSCAPE:
+        case DISPLAY_ORIENTATION_LANDSCAPE:
             return "LANDSCAPE";
-        case ILI9341_ORIENTATION_LANDSCAPE_LEFT:
+        case DISPLAY_ORIENTATION_LANDSCAPE_LEFT:
             return "LANDSCAPE_LEFT";
         default:
             return "UNKNOWN";
@@ -100,7 +100,7 @@ static uint16_t TouchTestPage_MarkerPixel(uint16_t x,
         color = TOUCH_TEST_MARKER;
     }
     if (((dx * dx) + (dy * dy)) <= 9) {
-        color = ILI9341_WHITE;
+        color = DISPLAY_WHITE;
     }
     return color;
 }
@@ -149,7 +149,7 @@ static void TouchTestPage_DrawMarkerPatch(uint16_t center_x,
         }
     }
 
-    ILI9341_DrawImage_DMA_1D((uint16_t)left,
+    DISPLAY_DrawImage_DMA_1D((uint16_t)left,
                              (uint16_t)top,
                              TOUCH_TEST_PATCH_SIZE,
                              TOUCH_TEST_PATCH_SIZE,
@@ -157,10 +157,10 @@ static void TouchTestPage_DrawMarkerPatch(uint16_t center_x,
 }
 
 static uint16_t TouchTestPage_MapToFieldX(uint16_t x) {
-    uint32_t max_x = (ILI9341_TOUCH_SCALE_X > 1U) ?
-                     (ILI9341_TOUCH_SCALE_X - 1U) : 1U;
+    uint32_t max_x = (DISPLAY_TOUCH_SCALE_X > 1U) ?
+                     (DISPLAY_TOUCH_SCALE_X - 1U) : 1U;
 
-    if (x >= ILI9341_TOUCH_SCALE_X) {
+    if (x >= DISPLAY_TOUCH_SCALE_X) {
         x = (uint16_t)max_x;
     }
     return (uint16_t)(TOUCH_TEST_FIELD_X +
@@ -168,10 +168,10 @@ static uint16_t TouchTestPage_MapToFieldX(uint16_t x) {
 }
 
 static uint16_t TouchTestPage_MapToFieldY(uint16_t y) {
-    uint32_t max_y = (ILI9341_TOUCH_SCALE_Y > 1U) ?
-                     (ILI9341_TOUCH_SCALE_Y - 1U) : 1U;
+    uint32_t max_y = (DISPLAY_TOUCH_SCALE_Y > 1U) ?
+                     (DISPLAY_TOUCH_SCALE_Y - 1U) : 1U;
 
-    if (y >= ILI9341_TOUCH_SCALE_Y) {
+    if (y >= DISPLAY_TOUCH_SCALE_Y) {
         y = (uint16_t)max_y;
     }
     return (uint16_t)(TOUCH_TEST_FIELD_Y +
@@ -188,124 +188,124 @@ static void TouchTestPage_DrawFieldStatic(void) {
     const uint16_t q1_y = TOUCH_TEST_FIELD_Y + (TOUCH_TEST_FIELD_H / 4U);
     const uint16_t q3_y = TOUCH_TEST_FIELD_Y + ((TOUCH_TEST_FIELD_H * 3U) / 4U);
 
-    ILI9341_FillRectangle_DMA(TOUCH_TEST_FIELD_X,
+    DISPLAY_FillRectangle_DMA(TOUCH_TEST_FIELD_X,
                               TOUCH_TEST_FIELD_Y,
                               TOUCH_TEST_FIELD_W,
                               TOUCH_TEST_FIELD_H,
                               TOUCH_TEST_FIELD);
-    ILI9341_FillRectangle_DMA(TOUCH_TEST_FIELD_X,
+    DISPLAY_FillRectangle_DMA(TOUCH_TEST_FIELD_X,
                               TOUCH_TEST_FIELD_Y,
                               TOUCH_TEST_FIELD_W,
                               1U,
                               TOUCH_TEST_BORDER);
-    ILI9341_FillRectangle_DMA(TOUCH_TEST_FIELD_X,
+    DISPLAY_FillRectangle_DMA(TOUCH_TEST_FIELD_X,
                               bottom,
                               TOUCH_TEST_FIELD_W,
                               1U,
                               TOUCH_TEST_BORDER);
-    ILI9341_FillRectangle_DMA(TOUCH_TEST_FIELD_X,
+    DISPLAY_FillRectangle_DMA(TOUCH_TEST_FIELD_X,
                               TOUCH_TEST_FIELD_Y,
                               1U,
                               TOUCH_TEST_FIELD_H,
                               TOUCH_TEST_BORDER);
-    ILI9341_FillRectangle_DMA(right,
+    DISPLAY_FillRectangle_DMA(right,
                               TOUCH_TEST_FIELD_Y,
                               1U,
                               TOUCH_TEST_FIELD_H,
                               TOUCH_TEST_BORDER);
-    ILI9341_FillRectangle_DMA(q1_x, TOUCH_TEST_FIELD_Y,
+    DISPLAY_FillRectangle_DMA(q1_x, TOUCH_TEST_FIELD_Y,
                               1U, TOUCH_TEST_FIELD_H,
                               TOUCH_TEST_GRID);
-    ILI9341_FillRectangle_DMA(mid_x, TOUCH_TEST_FIELD_Y,
+    DISPLAY_FillRectangle_DMA(mid_x, TOUCH_TEST_FIELD_Y,
                               1U, TOUCH_TEST_FIELD_H,
                               TOUCH_TEST_GRID);
-    ILI9341_FillRectangle_DMA(q3_x, TOUCH_TEST_FIELD_Y,
+    DISPLAY_FillRectangle_DMA(q3_x, TOUCH_TEST_FIELD_Y,
                               1U, TOUCH_TEST_FIELD_H,
                               TOUCH_TEST_GRID);
-    ILI9341_FillRectangle_DMA(TOUCH_TEST_FIELD_X, q1_y,
+    DISPLAY_FillRectangle_DMA(TOUCH_TEST_FIELD_X, q1_y,
                               TOUCH_TEST_FIELD_W, 1U,
                               TOUCH_TEST_GRID);
-    ILI9341_FillRectangle_DMA(TOUCH_TEST_FIELD_X, mid_y,
+    DISPLAY_FillRectangle_DMA(TOUCH_TEST_FIELD_X, mid_y,
                               TOUCH_TEST_FIELD_W, 1U,
                               TOUCH_TEST_GRID);
-    ILI9341_FillRectangle_DMA(TOUCH_TEST_FIELD_X, q3_y,
+    DISPLAY_FillRectangle_DMA(TOUCH_TEST_FIELD_X, q3_y,
                               TOUCH_TEST_FIELD_W, 1U,
                               TOUCH_TEST_GRID);
 
-    ILI9341_FillRectangle_DMA(TOUCH_TEST_FIELD_X,
+    DISPLAY_FillRectangle_DMA(TOUCH_TEST_FIELD_X,
                               TOUCH_TEST_FIELD_Y,
                               11U, 11U,
                               TOUCH_TEST_TARGET);
-    ILI9341_FillRectangle_DMA(right - 10U,
+    DISPLAY_FillRectangle_DMA(right - 10U,
                               TOUCH_TEST_FIELD_Y,
                               11U, 11U,
                               TOUCH_TEST_TARGET);
-    ILI9341_FillRectangle_DMA(TOUCH_TEST_FIELD_X,
+    DISPLAY_FillRectangle_DMA(TOUCH_TEST_FIELD_X,
                               bottom - 10U,
                               11U, 11U,
                               TOUCH_TEST_TARGET);
-    ILI9341_FillRectangle_DMA(right - 10U,
+    DISPLAY_FillRectangle_DMA(right - 10U,
                               bottom - 10U,
                               11U, 11U,
                               TOUCH_TEST_TARGET);
 
-    ILI9341_WriteString_DMA(16, 110, "TL", Font_7x10,
+    DISPLAY_WriteString_DMA(16, 110, "TL", Font_7x10,
                             TOUCH_TEST_TARGET, TOUCH_TEST_FIELD);
-    ILI9341_WriteString_DMA(199, 110, "TR", Font_7x10,
+    DISPLAY_WriteString_DMA(199, 110, "TR", Font_7x10,
                             TOUCH_TEST_TARGET, TOUCH_TEST_FIELD);
-    ILI9341_WriteString_DMA(16, 192, "BL", Font_7x10,
+    DISPLAY_WriteString_DMA(16, 192, "BL", Font_7x10,
                             TOUCH_TEST_TARGET, TOUCH_TEST_FIELD);
-    ILI9341_WriteString_DMA(199, 192, "BR", Font_7x10,
+    DISPLAY_WriteString_DMA(199, 192, "BR", Font_7x10,
                             TOUCH_TEST_TARGET, TOUCH_TEST_FIELD);
 }
 
 static void TouchTestPage_DrawStatic(void) {
     char text[48];
 
-    ILI9341_FillScreen_DMA(TOUCH_TEST_BACKGROUND);
-    ILI9341_FillRectangle_DMA(0, 0, 320, 38,
-                              ILI9341_DARK_BLUE);
-    ILI9341_WriteString_DMA(8, 6, "TOUCH TEST",
+    DISPLAY_FillScreen_DMA(TOUCH_TEST_BACKGROUND);
+    DISPLAY_FillRectangle_DMA(0, 0, 320, 38,
+                              DISPLAY_DARK_BLUE);
+    DISPLAY_WriteString_DMA(8, 6, "TOUCH TEST",
                             Font_16x26,
-                            ILI9341_WHITE,
-                            ILI9341_DARK_BLUE);
-    ILI9341_WriteString_DMA(270, 14, "PAGE 2",
+                            DISPLAY_WHITE,
+                            DISPLAY_DARK_BLUE);
+    DISPLAY_WriteString_DMA(270, 14, "PAGE 2",
                             Font_7x10,
-                            ILI9341_CYAN,
-                            ILI9341_DARK_BLUE);
+                            DISPLAY_CYAN,
+                            DISPLAY_DARK_BLUE);
 
-    ILI9341_FillRectangle_DMA(8, 44, 304, 32,
+    DISPLAY_FillRectangle_DMA(8, 44, 304, 32,
                               TOUCH_TEST_PANEL);
-    ILI9341_WriteString_DMA(14, 49,
+    DISPLAY_WriteString_DMA(14, 49,
                             "CTRL:XPT2046/ADS7846  SPI2 PB9/PB1",
                             Font_7x10,
-                            ILI9341_CYAN,
+                            DISPLAY_CYAN,
                             TOUCH_TEST_PANEL);
     snprintf(text, sizeof(text),
              "ORI:%s  LCD:%ux%u",
              TouchTestPage_OrientationName(),
-             (unsigned int)ILI9341_SCREEN_WIDTH,
-             (unsigned int)ILI9341_SCREEN_HEIGHT);
-    ILI9341_WriteString_DMA(14, 63, text,
+             (unsigned int)DISPLAY_SCREEN_WIDTH,
+             (unsigned int)DISPLAY_SCREEN_HEIGHT);
+    DISPLAY_WriteString_DMA(14, 63, text,
                             Font_7x10,
-                            ILI9341_WHITE,
+                            DISPLAY_WHITE,
                             TOUCH_TEST_PANEL);
 
     TouchTestPage_DrawFieldStatic();
 
-    ILI9341_FillRectangle_DMA(TOUCH_TEST_SIDE_X,
+    DISPLAY_FillRectangle_DMA(TOUCH_TEST_SIDE_X,
                               TOUCH_TEST_SIDE_Y,
                               TOUCH_TEST_SIDE_W,
                               TOUCH_TEST_SIDE_H,
                               TOUCH_TEST_PANEL);
-    ILI9341_WriteString_DMA(240, 92, "LIVE",
+    DISPLAY_WriteString_DMA(240, 92, "LIVE",
                             Font_7x10,
-                            ILI9341_YELLOW,
+                            DISPLAY_YELLOW,
                             TOUCH_TEST_PANEL);
 
-    ILI9341_WriteString_DMA(
+    DISPLAY_WriteString_DMA(
         8, 224, "CORNERS: MARKER FOLLOWS FINGER  LONG:CLEAR",
-        Font_7x10, ILI9341_WHITE, TOUCH_TEST_BACKGROUND);
+        Font_7x10, DISPLAY_WHITE, TOUCH_TEST_BACKGROUND);
 }
 
 static void TouchTestPage_UpdateMarker(TouchTestPage *page) {
@@ -339,7 +339,7 @@ static void TouchTestPage_UpdateText(TouchTestPage *page,
                                      uint8_t force) {
     char text[16];
     uint16_t status_color =
-        (page->pressed != 0U) ? ILI9341_GREEN : ILI9341_GRAY;
+        (page->pressed != 0U) ? DISPLAY_GREEN : DISPLAY_GRAY;
 
     if ((force == 0U) &&
         (page->text_divider < TOUCH_TEST_TEXT_TICKS) &&
@@ -353,9 +353,9 @@ static void TouchTestPage_UpdateText(TouchTestPage *page,
     }
     page->text_divider = 0U;
 
-    ILI9341_FillRectangle_DMA(238, 108, 66, 104,
+    DISPLAY_FillRectangle_DMA(238, 108, 66, 104,
                               TOUCH_TEST_PANEL);
-    ILI9341_WriteString_DMA(240, 108,
+    DISPLAY_WriteString_DMA(240, 108,
                             (page->pressed != 0U) ?
                             "PRESSED" : "RELEASE",
                             Font_7x10,
@@ -363,24 +363,24 @@ static void TouchTestPage_UpdateText(TouchTestPage *page,
                             TOUCH_TEST_PANEL);
     snprintf(text, sizeof(text), "X:%3u",
              (unsigned int)page->x);
-    ILI9341_WriteString_DMA(240, 126, text, Font_7x10,
-                            ILI9341_WHITE, TOUCH_TEST_PANEL);
+    DISPLAY_WriteString_DMA(240, 126, text, Font_7x10,
+                            DISPLAY_WHITE, TOUCH_TEST_PANEL);
     snprintf(text, sizeof(text), "Y:%3u",
              (unsigned int)page->y);
-    ILI9341_WriteString_DMA(240, 140, text, Font_7x10,
-                            ILI9341_WHITE, TOUCH_TEST_PANEL);
+    DISPLAY_WriteString_DMA(240, 140, text, Font_7x10,
+                            DISPLAY_WHITE, TOUCH_TEST_PANEL);
     snprintf(text, sizeof(text), "RX:%5lu",
              (unsigned long)page->raw_x);
-    ILI9341_WriteString_DMA(240, 158, text, Font_7x10,
-                            ILI9341_CYAN, TOUCH_TEST_PANEL);
+    DISPLAY_WriteString_DMA(240, 158, text, Font_7x10,
+                            DISPLAY_CYAN, TOUCH_TEST_PANEL);
     snprintf(text, sizeof(text), "RY:%5lu",
              (unsigned long)page->raw_y);
-    ILI9341_WriteString_DMA(240, 172, text, Font_7x10,
-                            ILI9341_CYAN, TOUCH_TEST_PANEL);
+    DISPLAY_WriteString_DMA(240, 172, text, Font_7x10,
+                            DISPLAY_CYAN, TOUCH_TEST_PANEL);
     snprintf(text, sizeof(text), "S:%5lu",
              (unsigned long)page->samples);
-    ILI9341_WriteString_DMA(240, 194, text, Font_7x10,
-                            ILI9341_GRAY, TOUCH_TEST_PANEL);
+    DISPLAY_WriteString_DMA(240, 194, text, Font_7x10,
+                            DISPLAY_GRAY, TOUCH_TEST_PANEL);
 
     page->displayed_pressed = page->pressed;
     page->displayed_x = page->x;
@@ -406,9 +406,9 @@ void TouchTestPage_Update(TouchTestPage *page) {
     uint16_t x = page->x;
     uint16_t y = page->y;
 
-    page->pressed = ILI9341_TouchPressed() ? 1U : 0U;
+    page->pressed = DISPLAY_TouchPressed() ? 1U : 0U;
     if (page->pressed != 0U) {
-        if (ILI9341_TouchGetCoordinates(&x, &y)) {
+        if (DISPLAY_TouchGetCoordinates(&x, &y)) {
             page->x = x;
             page->y = y;
             page->raw_x = raw_x;

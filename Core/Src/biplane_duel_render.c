@@ -7,26 +7,26 @@
 #define BIPLANE_RENDER_PATCH_WIDTH       96U
 #define BIPLANE_RENDER_PATCH_HEIGHT      48U
 
-#define BIPLANE_SKY_COLOR                ILI9341_COLOR565(12, 185, 230)
-#define BIPLANE_CLOUD_COLOR              ILI9341_COLOR565(155, 235, 240)
-#define BIPLANE_CLOUD_SHADE              ILI9341_COLOR565(105, 215, 225)
-#define BIPLANE_GRASS_COLOR              ILI9341_COLOR565(105, 185, 45)
-#define BIPLANE_GRASS_DARK               ILI9341_COLOR565(50, 115, 35)
-#define BIPLANE_DIRT_COLOR               ILI9341_COLOR565(150, 105, 55)
-#define BIPLANE_DIRT_DARK                ILI9341_COLOR565(95, 70, 45)
-#define BIPLANE_HOUSE_WALL               ILI9341_COLOR565(240, 225, 190)
-#define BIPLANE_HOUSE_ROOF               ILI9341_COLOR565(180, 55, 40)
-#define BIPLANE_HOUSE_DARK               ILI9341_COLOR565(95, 55, 40)
+#define BIPLANE_SKY_COLOR                DISPLAY_COLOR565(12, 185, 230)
+#define BIPLANE_CLOUD_COLOR              DISPLAY_COLOR565(155, 235, 240)
+#define BIPLANE_CLOUD_SHADE              DISPLAY_COLOR565(105, 215, 225)
+#define BIPLANE_GRASS_COLOR              DISPLAY_COLOR565(105, 185, 45)
+#define BIPLANE_GRASS_DARK               DISPLAY_COLOR565(50, 115, 35)
+#define BIPLANE_DIRT_COLOR               DISPLAY_COLOR565(150, 105, 55)
+#define BIPLANE_DIRT_DARK                DISPLAY_COLOR565(95, 70, 45)
+#define BIPLANE_HOUSE_WALL               DISPLAY_COLOR565(240, 225, 190)
+#define BIPLANE_HOUSE_ROOF               DISPLAY_COLOR565(180, 55, 40)
+#define BIPLANE_HOUSE_DARK               DISPLAY_COLOR565(95, 55, 40)
 
-#define BIPLANE_PLAYER_BLUE              ILI9341_COLOR565(45, 125, 230)
-#define BIPLANE_PLAYER_LIGHT             ILI9341_COLOR565(95, 220, 255)
-#define BIPLANE_ENEMY_ORANGE             ILI9341_COLOR565(245, 120, 35)
-#define BIPLANE_ENEMY_RED                ILI9341_COLOR565(190, 35, 30)
-#define BIPLANE_ZEPPELIN_GREEN           ILI9341_COLOR565(130, 220, 120)
-#define BIPLANE_ZEPPELIN_DARK            ILI9341_COLOR565(35, 145, 65)
-#define BIPLANE_ZEPPELIN_HURT            ILI9341_COLOR565(220, 215, 85)
-#define BIPLANE_BOMB_GRAY                ILI9341_COLOR565(110, 120, 125)
-#define BIPLANE_BOMB_DARK                ILI9341_COLOR565(55, 65, 75)
+#define BIPLANE_PLAYER_BLUE              DISPLAY_COLOR565(45, 125, 230)
+#define BIPLANE_PLAYER_LIGHT             DISPLAY_COLOR565(95, 220, 255)
+#define BIPLANE_ENEMY_ORANGE             DISPLAY_COLOR565(245, 120, 35)
+#define BIPLANE_ENEMY_RED                DISPLAY_COLOR565(190, 35, 30)
+#define BIPLANE_ZEPPELIN_GREEN           DISPLAY_COLOR565(130, 220, 120)
+#define BIPLANE_ZEPPELIN_DARK            DISPLAY_COLOR565(35, 145, 65)
+#define BIPLANE_ZEPPELIN_HURT            DISPLAY_COLOR565(220, 215, 85)
+#define BIPLANE_BOMB_GRAY                DISPLAY_COLOR565(110, 120, 125)
+#define BIPLANE_BOMB_DARK                DISPLAY_COLOR565(55, 65, 75)
 
 #if (BIPLANE_RENDER_PATCH_WIDTH * \
      BIPLANE_RENDER_PATCH_HEIGHT * 2U) > RENDER_SCRATCH_BUFFER_SIZE
@@ -155,7 +155,7 @@ static uint8_t BiplaneRender_RectsOverlap(
 
 static uint16_t BiplaneRender_StaticPixel(int16_t x, int16_t y) {
     if (y < BIPLANE_DUEL_PLAYFIELD_TOP) {
-        return ILI9341_BLACK;
+        return DISPLAY_BLACK;
     }
 
     if ((y >= 184) && (y < 197)) {
@@ -176,7 +176,7 @@ static uint16_t BiplaneRender_StaticPixel(int16_t x, int16_t y) {
         if (((x >= 151) && (x <= 158)) ||
             ((x >= 179) && (x <= 186))) {
             if ((y >= 201) && (y <= 207)) {
-                return ILI9341_CYAN;
+                return DISPLAY_CYAN;
             }
         }
         return BIPLANE_HOUSE_WALL;
@@ -266,7 +266,7 @@ static uint8_t BiplaneRender_PointInPlane(
                     BIPLANE_PLAYER_LIGHT;
 
     if ((dx >= 14) && (dx <= 17) && (ady <= 5)) {
-        *color = ILI9341_WHITE;
+        *color = DISPLAY_WHITE;
         return 1U;
     }
     if ((dx >= -11) && (dx <= 7) &&
@@ -277,17 +277,17 @@ static uint8_t BiplaneRender_PointInPlane(
     }
     if (((dx == -4) || (dx == 5)) &&
         (dy >= -5) && (dy <= 5)) {
-        *color = ILI9341_GRAY;
+        *color = DISPLAY_GRAY;
         return 1U;
     }
     if ((dx >= -14) && (dx <= 13) && (ady <= 3)) {
         *color = body;
         if ((dx >= -1) && (dx <= 4) &&
             (dy >= -5) && (dy <= -2)) {
-            *color = ILI9341_CYAN;
+            *color = DISPLAY_CYAN;
         }
         if ((dx <= -11) || (dx >= 11) || (ady == 3)) {
-            *color = ILI9341_WHITE;
+            *color = DISPLAY_WHITE;
         }
         return 1U;
     }
@@ -377,7 +377,7 @@ static void BiplaneRender_DrawZeppelinToPatch(
                 }
                 if (((dx == -12) || (dx == 0) || (dx == 12)) &&
                     (dy >= -2) && (dy <= 2)) {
-                    color = ILI9341_PINK;
+                    color = DISPLAY_PINK;
                 }
                 BiplaneRender_PutPixel(
                     rect, width, height, x, y, color);
@@ -401,7 +401,7 @@ static void BiplaneRender_DrawZeppelinToPatch(
                  (y == center_y + 16) ||
                  (x == center_x - 13) ||
                  (x == center_x + 13)) ?
-                BIPLANE_BOMB_DARK : ILI9341_GRAY;
+                BIPLANE_BOMB_DARK : DISPLAY_GRAY;
 
             BiplaneRender_PutPixel(
                 rect, width, height, x, y, color);
@@ -441,8 +441,8 @@ static void BiplaneRender_DrawBombsToPatch(
                     (BiplaneRender_Abs16(dx) <= (int16_t)(dy + 11))) {
                     BiplaneRender_PutPixel(
                         rect, width, height, x, y,
-                        (dy < -7) ? ILI9341_YELLOW :
-                        ILI9341_ORANGE);
+                        (dy < -7) ? DISPLAY_YELLOW :
+                        DISPLAY_ORANGE);
                 } else if (BiplaneRender_PointInCircle(
                                x, y, center_x, center_y, 5) != 0U) {
                     BiplaneRender_PutPixel(
@@ -477,10 +477,10 @@ static void BiplaneRender_DrawBulletsToPatch(
              x++) {
             BiplaneRender_PutPixel(
                 rect, width, height, x, bullet_y,
-                ILI9341_YELLOW);
+                DISPLAY_YELLOW);
             BiplaneRender_PutPixel(
                 rect, width, height, x, bullet_y + 1,
-                ILI9341_WHITE);
+                DISPLAY_WHITE);
         }
     }
 
@@ -501,8 +501,8 @@ static void BiplaneRender_DrawBulletsToPatch(
             for (int16_t x = bullet_x - 2; x <= bullet_x + 2; x++) {
                 BiplaneRender_PutPixel(
                     rect, width, height, x, y,
-                    (y == bullet_y) ? ILI9341_RED :
-                    ILI9341_ORANGE);
+                    (y == bullet_y) ? DISPLAY_RED :
+                    DISPLAY_ORANGE);
             }
         }
     }
@@ -592,11 +592,11 @@ static void BiplaneRender_DrawExplosionsToPatch(
                 if (distance <= inner) {
                     BiplaneRender_PutPixel(
                         rect, width, height, x, y,
-                        ILI9341_YELLOW);
+                        DISPLAY_YELLOW);
                 } else if (distance <= outer) {
                     BiplaneRender_PutPixel(
                         rect, width, height, x, y,
-                        ILI9341_ORANGE);
+                        DISPLAY_ORANGE);
                 }
             }
         }
@@ -628,7 +628,7 @@ static uint8_t BiplaneRender_DrawPatch(
     BiplaneRender_DrawExplosionsToPatch(game, rect, width, height);
     BiplaneRender_DrawPlayerToPatch(game, rect, width, height);
 
-    ILI9341_DrawImage_DMA_1D(
+    DISPLAY_DrawImage_DMA_1D(
         (uint16_t)rect.x0,
         (uint16_t)rect.y0,
         width,
@@ -699,79 +699,79 @@ static void BiplaneRender_DrawHud(
     const BiplaneDuelState *game) {
     char text[24];
 
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         0, 0, BIPLANE_DUEL_SCREEN_WIDTH,
-        BIPLANE_DUEL_PLAYFIELD_TOP, ILI9341_BLACK);
-    ILI9341_FillRectangle_DMA(
+        BIPLANE_DUEL_PLAYFIELD_TOP, DISPLAY_BLACK);
+    DISPLAY_FillRectangle_DMA(
         0, BIPLANE_DUEL_PLAYFIELD_TOP - 1,
-        BIPLANE_DUEL_SCREEN_WIDTH, 1, ILI9341_GRAY);
-    ILI9341_WriteString_DMA(
+        BIPLANE_DUEL_SCREEN_WIDTH, 1, DISPLAY_GRAY);
+    DISPLAY_WriteString_DMA(
         4, 4, "BIPLANE DUEL", Font_11x18,
-        ILI9341_WHITE, ILI9341_BLACK);
+        DISPLAY_WHITE, DISPLAY_BLACK);
     snprintf(text, sizeof(text), "L%u %05lu",
              (unsigned int)game->level,
              (unsigned long)game->score);
-    ILI9341_WriteString_DMA(
+    DISPLAY_WriteString_DMA(
         158, 9, text, Font_7x10,
-        ILI9341_CYAN, ILI9341_BLACK);
+        DISPLAY_CYAN, DISPLAY_BLACK);
     snprintf(text, sizeof(text), "SH %u",
              (unsigned int)game->shields);
-    ILI9341_WriteString_DMA(
+    DISPLAY_WriteString_DMA(
         280, 9, text, Font_7x10,
         (game->shields > 1U) ?
-        ILI9341_GREEN : ILI9341_ORANGE,
-        ILI9341_BLACK);
+        DISPLAY_GREEN : DISPLAY_ORANGE,
+        DISPLAY_BLACK);
 }
 
 static void BiplaneRender_DrawStaticField(void) {
-    ILI9341_FillScreen_DMA(BIPLANE_SKY_COLOR);
+    DISPLAY_FillScreen_DMA(BIPLANE_SKY_COLOR);
 
-    ILI9341_FillCircle_DMA(24, 45, 22, BIPLANE_CLOUD_COLOR);
-    ILI9341_FillCircle_DMA(47, 43, 18, BIPLANE_CLOUD_COLOR);
-    ILI9341_FillCircle_DMA(16, 70, 18, BIPLANE_CLOUD_COLOR);
-    ILI9341_FillCircle_DMA(47, 72, 20, BIPLANE_CLOUD_COLOR);
-    ILI9341_FillCircle_DMA(112, 152, 19, BIPLANE_CLOUD_SHADE);
-    ILI9341_FillCircle_DMA(138, 150, 25, BIPLANE_CLOUD_SHADE);
-    ILI9341_FillCircle_DMA(164, 159, 18, BIPLANE_CLOUD_SHADE);
-    ILI9341_FillCircle_DMA(285, 182, 21, BIPLANE_CLOUD_SHADE);
+    DISPLAY_FillCircle_DMA(24, 45, 22, BIPLANE_CLOUD_COLOR);
+    DISPLAY_FillCircle_DMA(47, 43, 18, BIPLANE_CLOUD_COLOR);
+    DISPLAY_FillCircle_DMA(16, 70, 18, BIPLANE_CLOUD_COLOR);
+    DISPLAY_FillCircle_DMA(47, 72, 20, BIPLANE_CLOUD_COLOR);
+    DISPLAY_FillCircle_DMA(112, 152, 19, BIPLANE_CLOUD_SHADE);
+    DISPLAY_FillCircle_DMA(138, 150, 25, BIPLANE_CLOUD_SHADE);
+    DISPLAY_FillCircle_DMA(164, 159, 18, BIPLANE_CLOUD_SHADE);
+    DISPLAY_FillCircle_DMA(285, 182, 21, BIPLANE_CLOUD_SHADE);
 
     for (uint16_t y = 184U; y < 197U; y++) {
         uint16_t half_width =
             (uint16_t)(6U + ((y - 184U) * 3U));
 
-        ILI9341_FillRectangle_DMA(
+        DISPLAY_FillRectangle_DMA(
             (uint16_t)(168U - half_width), y,
             (uint16_t)((half_width * 2U) + 1U), 1,
             BIPLANE_HOUSE_ROOF);
     }
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         145, 197, 47,
         BIPLANE_DUEL_GROUND_Y - 197,
         BIPLANE_HOUSE_WALL);
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         145, 197, 47, 1, BIPLANE_HOUSE_DARK);
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         145, 197, 1,
         BIPLANE_DUEL_GROUND_Y - 197,
         BIPLANE_HOUSE_DARK);
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         191, 197, 1,
         BIPLANE_DUEL_GROUND_Y - 197,
         BIPLANE_HOUSE_DARK);
-    ILI9341_FillRectangle_DMA(
-        151, 201, 8, 7, ILI9341_CYAN);
-    ILI9341_FillRectangle_DMA(
-        179, 201, 8, 7, ILI9341_CYAN);
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
+        151, 201, 8, 7, DISPLAY_CYAN);
+    DISPLAY_FillRectangle_DMA(
+        179, 201, 8, 7, DISPLAY_CYAN);
+    DISPLAY_FillRectangle_DMA(
         164, 202, 11,
         BIPLANE_DUEL_GROUND_Y - 202,
         BIPLANE_HOUSE_DARK);
 
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         0, BIPLANE_DUEL_GROUND_Y,
         BIPLANE_DUEL_SCREEN_WIDTH, 4,
         BIPLANE_GRASS_COLOR);
-    ILI9341_FillRectangle_DMA(
+    DISPLAY_FillRectangle_DMA(
         0, BIPLANE_DUEL_GROUND_Y + 4,
         BIPLANE_DUEL_SCREEN_WIDTH,
         BIPLANE_DUEL_SCREEN_HEIGHT -
@@ -909,12 +909,12 @@ static void BiplaneRender_DrawWholeField(
     BiplaneRender_DrawObjects(game);
 
     if (game->phase == BIPLANE_DUEL_PHASE_RESTART_PAUSE) {
-        ILI9341_WriteString_DMA(
+        DISPLAY_WriteString_DMA(
             74, 88, "PLANE LOST", Font_16x26,
-            ILI9341_ORANGE, BIPLANE_SKY_COLOR);
-        ILI9341_WriteString_DMA(
+            DISPLAY_ORANGE, BIPLANE_SKY_COLOR);
+        DISPLAY_WriteString_DMA(
             108, 123, "AUTO RESTART", Font_7x10,
-            ILI9341_CYAN, BIPLANE_SKY_COLOR);
+            DISPLAY_CYAN, BIPLANE_SKY_COLOR);
     }
 
     BiplaneRender_SaveSnapshots(game);
