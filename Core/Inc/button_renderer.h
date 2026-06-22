@@ -10,6 +10,7 @@
 
 #include "virtual_buttons.h"
 
-void ButtonRenderer_Draw(VirtualButton* button);
+void ButtonRenderer_Draw(VirtualButton *button);
+void ButtonRenderer_DrawList(VirtualButtonList *list);
 
 #endif /* INC_BUTTON_RENDERER_H_ */

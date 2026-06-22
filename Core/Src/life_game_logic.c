@@ -5,6 +5,11 @@
 #define LIFE_GAME_STEP_DIVIDER          3U
 #define LIFE_GAME_INITIAL_DENSITY       88U
 #define LIFE_GAME_WAIT_STATUS_TICKS     4U
+#define LIFE_GAME_SHAKE_RAW_GATE        3300U
+#define LIFE_GAME_SHAKE_GAIN_DIVIDER    2U
+#define LIFE_GAME_SHAKE_GAIN_MAX        1600U
+#define LIFE_GAME_SHAKE_DECAY           520U
+#define LIFE_GAME_TOUCH_BRUSH_RADIUS    1
 
 static uint32_t LifeGame_Hash(uint32_t value) {
     value ^= value >> 16;
@@ -70,6 +75,30 @@ static void LifeGame_MarkDirty(LifeGameState *game,
         (uint8_t)(1U << (index & 7U));
 }
 
+static uint8_t LifeGame_SetCell(LifeGameState *game,
+                                uint16_t column,
+                                uint16_t row,
+                                uint8_t alive) {
+    uint16_t index =
+        (uint16_t)((row * LIFE_GAME_COLUMNS) + column);
+    uint8_t old_alive = LifeGame_GetBit(game->cells, index);
+
+    alive = (alive != 0U) ? 1U : 0U;
+    if (old_alive == alive) {
+        return 0U;
+    }
+
+    LifeGame_SetBit(game->cells, index, alive);
+    LifeGame_MarkDirty(game, index);
+    if (alive != 0U) {
+        game->population++;
+    } else if (game->population > 0U) {
+        game->population--;
+    }
+    game->stable_ticks = 0U;
+    return 1U;
+}
+
 static void LifeGame_MixSensorSeed(
     LifeGameState *game,
     const MPU6000_Data_t *mpu_data) {
@@ -97,11 +126,17 @@ static uint8_t LifeGame_UpdateShake(
     uint32_t raw_energy;
     uint32_t gyro_motion;
     uint32_t gyro_jerk;
+    uint32_t charge_step;
 
     game->mpu_online = (mpu_status == HAL_OK) ? 1U : 0U;
     if (mpu_status != HAL_OK) {
-        game->shake_energy =
-            (uint16_t)(((uint32_t)game->shake_energy * 3U) / 4U);
+        if (game->shake_energy > LIFE_GAME_SHAKE_DECAY) {
+            game->shake_energy =
+                (uint16_t)(game->shake_energy -
+                           LIFE_GAME_SHAKE_DECAY);
+        } else {
+            game->shake_energy = 0U;
+        }
         return 0U;
     }
 
@@ -130,9 +165,27 @@ static uint8_t LifeGame_UpdateShake(
         raw_energy = 65535U;
     }
 
-    game->shake_energy =
-        (uint16_t)((((uint32_t)game->shake_energy * 3U) +
-                    raw_energy) / 4U);
+    if (raw_energy > LIFE_GAME_SHAKE_RAW_GATE) {
+        charge_step =
+            (raw_energy - LIFE_GAME_SHAKE_RAW_GATE) /
+            LIFE_GAME_SHAKE_GAIN_DIVIDER;
+        if (charge_step > LIFE_GAME_SHAKE_GAIN_MAX) {
+            charge_step = LIFE_GAME_SHAKE_GAIN_MAX;
+        }
+        if (((uint32_t)game->shake_energy + charge_step) >
+            65535U) {
+            game->shake_energy = 65535U;
+        } else {
+            game->shake_energy =
+                (uint16_t)(game->shake_energy + charge_step);
+        }
+    } else if (game->shake_energy > LIFE_GAME_SHAKE_DECAY) {
+        game->shake_energy =
+            (uint16_t)(game->shake_energy -
+                       LIFE_GAME_SHAKE_DECAY);
+    } else {
+        game->shake_energy = 0U;
+    }
     game->previous_gyro_x = mpu_data->gyro_x;
     game->previous_gyro_y = mpu_data->gyro_y;
     game->previous_gyro_z = mpu_data->gyro_z;
@@ -280,6 +333,64 @@ LifeGameEvent LifeGame_Update(LifeGameState *game,
     }
     game->step_ticks = LIFE_GAME_STEP_DIVIDER;
     return LifeGame_Step(game);
+}
+
+LifeGameEvent LifeGame_HandleTouch(LifeGameState *game,
+                                   uint8_t touch_pressed,
+                                   uint16_t touch_x,
+                                   uint16_t touch_y) {
+    uint16_t column;
+    uint16_t row;
+    uint8_t changed = 0U;
+
+    if ((game->phase != LIFE_GAME_PHASE_RUNNING) ||
+        (touch_pressed == 0U) ||
+        (touch_x < LIFE_GAME_BOARD_X) ||
+        (touch_y < LIFE_GAME_BOARD_Y) ||
+        (touch_x >= (LIFE_GAME_BOARD_X +
+                     (LIFE_GAME_COLUMNS * LIFE_GAME_CELL_SIZE))) ||
+        (touch_y >= (LIFE_GAME_BOARD_Y +
+                     (LIFE_GAME_ROWS * LIFE_GAME_CELL_SIZE)))) {
+        return LIFE_GAME_EVENT_NONE;
+    }
+
+    column =
+        (uint16_t)((touch_x - LIFE_GAME_BOARD_X) /
+                   LIFE_GAME_CELL_SIZE);
+    row =
+        (uint16_t)((touch_y - LIFE_GAME_BOARD_Y) /
+                   LIFE_GAME_CELL_SIZE);
+
+    for (int16_t dy = -LIFE_GAME_TOUCH_BRUSH_RADIUS;
+         dy <= LIFE_GAME_TOUCH_BRUSH_RADIUS;
+         dy++) {
+        int16_t brush_row = (int16_t)row + dy;
+
+        if ((brush_row < 0) ||
+            (brush_row >= (int16_t)LIFE_GAME_ROWS)) {
+            continue;
+        }
+        for (int16_t dx = -LIFE_GAME_TOUCH_BRUSH_RADIUS;
+             dx <= LIFE_GAME_TOUCH_BRUSH_RADIUS;
+             dx++) {
+            int16_t brush_column = (int16_t)column + dx;
+
+            if ((brush_column < 0) ||
+                (brush_column >= (int16_t)LIFE_GAME_COLUMNS)) {
+                continue;
+            }
+            changed |= LifeGame_SetCell(
+                game,
+                (uint16_t)brush_column,
+                (uint16_t)brush_row,
+                1U);
+        }
+    }
+
+    return (changed != 0U) ?
+           (LIFE_GAME_EVENT_TOUCH_SPAWN |
+            LIFE_GAME_EVENT_HUD_CHANGED) :
+           LIFE_GAME_EVENT_NONE;
 }
 
 uint8_t LifeGame_CellAlive(const LifeGameState *game,

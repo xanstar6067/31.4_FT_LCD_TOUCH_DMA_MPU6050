@@ -5,10 +5,11 @@
 #define SHAKE_GRAVITY                 0.30f
 #define SHAKE_MAX_FALL_SPEED          5.8f
 #define SHAKE_MIN_RISE_SPEED         -7.0f
-#define SHAKE_Z_THRESHOLD             1250.0f
-#define SHAKE_Z_FULL_POWER            6200.0f
-#define SHAKE_Z_FILTER                0.42f
-#define SHAKE_COOLDOWN_TICKS          5U
+#define SHAKE_Z_RAW_GATE              2300.0f
+#define SHAKE_Z_THRESHOLD             3600.0f
+#define SHAKE_Z_FULL_POWER            9300.0f
+#define SHAKE_Z_FILTER                0.24f
+#define SHAKE_COOLDOWN_TICKS          8U
 #define SHAKE_RECOVERY_TICKS          45U
 
 static uint32_t ShakeFlight_Random(ShakeFlightState *game) {
@@ -107,6 +108,9 @@ static void ShakeFlight_ApplyShake(ShakeFlightState *game,
         dz = -dz;
     }
     raw_shake = (float)dz;
+    if (raw_shake < SHAKE_Z_RAW_GATE) {
+        raw_shake = 0.0f;
+    }
     game->filtered_shake +=
         (raw_shake - game->filtered_shake) *
         SHAKE_Z_FILTER;

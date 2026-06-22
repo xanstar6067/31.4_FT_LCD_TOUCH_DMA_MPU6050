@@ -104,7 +104,7 @@ static void LifeGameRender_DrawWaitMeter(
     DISPLAY_FillRectangle_DMA(
         78, 174, 178, 12, LIFE_RENDER_BACKGROUND);
     if (game->mpu_online != 0U) {
-        snprintf(text, sizeof(text), "GYRO ENERGY:%5u",
+        snprintf(text, sizeof(text), "GYRO CHARGE:%5u",
                  (unsigned int)game->shake_energy);
         DISPLAY_WriteString_DMA(
             82, 176, text, Font_7x10,
@@ -135,7 +135,7 @@ static void LifeGameRender_DrawWaitScreen(
         62, 105, "TO SEED THE CELLS", Font_11x18,
         DISPLAY_CYAN, LIFE_RENDER_PANEL);
     DISPLAY_WriteString_DMA(
-        72, 132, "strong gyro shake starts",
+        67, 132, "keep shaking to fill bar",
         Font_7x10, DISPLAY_GRAY, LIFE_RENDER_PANEL);
 
     displayed_shake_energy = 0xFFFFU;
@@ -288,7 +288,8 @@ void LifeGameRender_Frame(LifeGameState *game,
         return;
     }
 
-    if ((event & LIFE_GAME_EVENT_STEP) != 0U) {
+    if ((event & (LIFE_GAME_EVENT_STEP |
+                  LIFE_GAME_EVENT_TOUCH_SPAWN)) != 0U) {
         LifeGameRender_DrawDirtyCells(game);
     }
     if ((event & LIFE_GAME_EVENT_HUD_CHANGED) != 0U) {

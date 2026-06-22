@@ -14,7 +14,7 @@
 #define LIFE_GAME_ROWS                  50U
 #define LIFE_GAME_CELL_COUNT            (LIFE_GAME_COLUMNS * LIFE_GAME_ROWS)
 #define LIFE_GAME_BITSET_SIZE           ((LIFE_GAME_CELL_COUNT + 7U) / 8U)
-#define LIFE_GAME_SHAKE_START_THRESHOLD 4800U
+#define LIFE_GAME_SHAKE_START_THRESHOLD 42000U
 
 typedef enum {
     LIFE_GAME_PHASE_WAITING = 0,
@@ -49,11 +49,16 @@ typedef uint8_t LifeGameEvent;
 #define LIFE_GAME_EVENT_STARTED         0x02U
 #define LIFE_GAME_EVENT_STEP            0x04U
 #define LIFE_GAME_EVENT_HUD_CHANGED     0x08U
+#define LIFE_GAME_EVENT_TOUCH_SPAWN     0x10U
 
 void LifeGame_Init(LifeGameState *game, uint32_t seed);
 LifeGameEvent LifeGame_Update(LifeGameState *game,
                               const MPU6000_Data_t *mpu_data,
                               HAL_StatusTypeDef mpu_status);
+LifeGameEvent LifeGame_HandleTouch(LifeGameState *game,
+                                   uint8_t touch_pressed,
+                                   uint16_t touch_x,
+                                   uint16_t touch_y);
 uint8_t LifeGame_CellAlive(const LifeGameState *game,
                            uint16_t column,
                            uint16_t row);
