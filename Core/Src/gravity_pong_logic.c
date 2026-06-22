@@ -71,6 +71,7 @@ static void GravityPong_ResetPaddles(GravityPongState *game) {
     game->ai.x =
         (GRAVITY_PONG_SCREEN_WIDTH - game->ai.width) / 2.0f;
     game->ai.vx = 0.0f;
+    game->filtered_accel_x = 0.0f;
 }
 
 static void GravityPong_ParkBall(GravityPongState *game) {
@@ -261,6 +262,7 @@ static GravityPongEvent GravityPong_Score(GravityPongState *game,
                                           uint8_t scorer) {
     game->last_scorer = scorer;
     game->serve_direction = (scorer == PONG_PLAYER_ID) ? -1 : 1;
+    GravityPong_ResetPaddles(game);
     GravityPong_ParkBall(game);
 
     if (scorer == PONG_PLAYER_ID) {
