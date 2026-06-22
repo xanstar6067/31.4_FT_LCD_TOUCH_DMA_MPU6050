@@ -4,8 +4,8 @@
 #include "display_driver.h"
 #include "render_scratch.h"
 
-#define BREAKER_RENDER_PATCH_WIDTH      96
-#define BREAKER_RENDER_PATCH_HEIGHT     32
+#define BREAKER_RENDER_PATCH_WIDTH      RENDER_SCRATCH_PATCH_WIDTH
+#define BREAKER_RENDER_PATCH_HEIGHT     RENDER_SCRATCH_PATCH_HEIGHT
 
 #define BREAKER_BACKGROUND_COLOR        DISPLAY_COLOR565(3, 9, 14)
 #define BREAKER_PADDLE_COLOR            DISPLAY_GREEN
@@ -348,10 +348,11 @@ void TiltBreakerRender_Frame(const TiltBreakerState *game,
     BreakerRenderRect rect;
 
     if ((breaker_renderer_initialized == 0U) ||
-        ((event & (TILT_BREAKER_EVENT_LIFE_CHANGED |
-                   TILT_BREAKER_EVENT_ROUND_STARTED |
+        ((event & (TILT_BREAKER_EVENT_ROUND_STARTED |
                    TILT_BREAKER_EVENT_LEVEL_STARTED |
-                   TILT_BREAKER_EVENT_GAME_STARTED)) != 0U)) {
+                   TILT_BREAKER_EVENT_GAME_STARTED)) != 0U) ||
+        (((event & TILT_BREAKER_EVENT_LIFE_CHANGED) != 0U) &&
+         (game->phase != TILT_BREAKER_PHASE_PLAYING))) {
         BreakerRender_DrawWholeField(game);
         return;
     }
@@ -408,12 +409,20 @@ void TiltBreakerRender_Frame(const TiltBreakerState *game,
 
         if ((previous_bonus_active != 0U) ||
             (game->bonus.active != 0U)) {
-            rect.x0 = previous_bonus_x;
-            rect.y0 = previous_bonus_y;
-            rect.x1 = previous_bonus_x + TILT_BREAKER_BONUS_WIDTH;
-            rect.y1 = previous_bonus_y + TILT_BREAKER_BONUS_HEIGHT;
+            if (previous_bonus_active != 0U) {
+                rect.x0 = previous_bonus_x;
+                rect.y0 = previous_bonus_y;
+                rect.x1 = previous_bonus_x + TILT_BREAKER_BONUS_WIDTH;
+                rect.y1 = previous_bonus_y + TILT_BREAKER_BONUS_HEIGHT;
+            } else {
+                rect.x0 = bonus_x;
+                rect.y0 = bonus_y;
+                rect.x1 = bonus_x + TILT_BREAKER_BONUS_WIDTH;
+                rect.y1 = bonus_y + TILT_BREAKER_BONUS_HEIGHT;
+            }
 
-            if (game->bonus.active != 0U) {
+            if ((game->bonus.active != 0U) &&
+                (previous_bonus_active != 0U)) {
                 if (bonus_x < rect.x0) {
                     rect.x0 = bonus_x;
                 }
@@ -440,6 +449,10 @@ void TiltBreakerRender_Frame(const TiltBreakerState *game,
             }
             BreakerRender_DrawBonusLabel(game);
         }
+    }
+
+    if ((event & TILT_BREAKER_EVENT_LIFE_CHANGED) != 0U) {
+        BreakerRender_DrawHud(game);
     }
 
     if ((ball_x != previous_ball_x) || (ball_y != previous_ball_y)) {
