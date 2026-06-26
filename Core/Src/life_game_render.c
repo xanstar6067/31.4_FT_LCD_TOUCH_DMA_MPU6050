@@ -143,7 +143,7 @@ static void LifeGameRender_DrawWaitScreen(
     LifeGameRender_DrawWaitMeter(game, 1U);
 
     DISPLAY_WriteString_DMA(
-        9, 218, "UKEY SHORT:NEXT   LONG:RESET",
+        9, 218, "UKEY SHORT:MENU   LONG:RESET",
         Font_7x10, DISPLAY_WHITE,
         LIFE_RENDER_BACKGROUND);
 }

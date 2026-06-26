@@ -333,7 +333,7 @@ static void MPU6000Page_DrawStatic(void) {
     DISPLAY_WriteString_DMA(164, 139, "GYRO RAW", Font_7x10,
                             MPU_PAGE_GYRO_COLOR, MPU_PAGE_PANEL);
     DISPLAY_WriteString_DMA(
-        8, 220, "TILT:BUBBLE  BARS:SIGNED RAW  LONG:RETRY",
+        8, 220, "TILT:BUBBLE  SHORT:MENU  LONG:RETRY",
         Font_7x10, DISPLAY_WHITE, MPU_PAGE_BACKGROUND);
 }
 

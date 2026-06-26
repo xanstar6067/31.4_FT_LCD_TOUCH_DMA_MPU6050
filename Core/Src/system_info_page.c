@@ -160,6 +160,6 @@ void SystemInfoPage_Render(const SystemInfoPage *page) {
                             DISPLAY_CYAN,
                             SYSTEM_INFO_BACKGROUND);
     DISPLAY_WriteString_DMA(
-        8, 226, "UKEY SHORT:NEXT   LONG:REFRESH",
+        8, 226, "UKEY SHORT:MENU   LONG:REFRESH",
         Font_7x10, DISPLAY_WHITE, SYSTEM_INFO_BACKGROUND);
 }

@@ -304,7 +304,7 @@ static void TouchTestPage_DrawStatic(void) {
                             TOUCH_TEST_PANEL);
 
     DISPLAY_WriteString_DMA(
-        8, 224, "CORNERS: MARKER FOLLOWS FINGER  LONG:CLEAR",
+        8, 224, "CORNERS:MARKER  SHORT:MENU  LONG:CLEAR",
         Font_7x10, DISPLAY_WHITE, TOUCH_TEST_BACKGROUND);
 }
 

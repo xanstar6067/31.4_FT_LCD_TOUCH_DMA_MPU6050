@@ -37,7 +37,8 @@
 #include "touch_test_page.h"
 
 typedef enum {
-    ARCADE_PAGE_SYSTEM_INFO = 0,
+    ARCADE_PAGE_MENU = 0,
+    ARCADE_PAGE_SYSTEM_INFO,
     ARCADE_PAGE_MPU6000,
     ARCADE_PAGE_TOUCH_TEST,
     ARCADE_PAGE_COMET_CATCH,
@@ -59,8 +60,39 @@ typedef enum {
     ARCADE_PAGE_COUNT
 } ArcadePageId;
 
+#define ARCADE_MENU_CATEGORY_COUNT 2U
+
+typedef enum {
+    ARCADE_MENU_CATEGORY_TESTS = 0,
+    ARCADE_MENU_CATEGORY_GAMES
+} ArcadeMenuCategory;
+
+typedef enum {
+    ARCADE_MENU_MODE_LIST = 0,
+    ARCADE_MENU_MODE_CONFIRM
+} ArcadeMenuMode;
+
+typedef struct {
+    ArcadeMenuCategory category;
+    ArcadeMenuMode mode;
+    ArcadePageId pending_page;
+    uint8_t pending_item;
+    uint8_t scroll_index[ARCADE_MENU_CATEGORY_COUNT];
+    uint16_t touch_start_x;
+    uint16_t touch_start_y;
+    uint16_t last_touch_x;
+    uint16_t last_touch_raw_y;
+    uint16_t last_touch_y;
+    uint8_t touch_was_pressed;
+    uint8_t touch_region;
+    uint8_t drag_started;
+    uint8_t ignore_until_release;
+    uint8_t needs_redraw;
+} ArcadeMenuState;
+
 typedef struct {
     ArcadePageId active_page;
+    ArcadeMenuState menu;
     uint32_t seed;
     uint32_t sensor_entropy;
     SystemInfoPage system_info;
