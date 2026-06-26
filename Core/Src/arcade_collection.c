@@ -25,6 +25,7 @@ uint8_t render_scratch_buffer[RENDER_SCRATCH_BUFFER_SIZE]
     __attribute__((aligned(4)));
 
 #define ARCADE_MENU_SCREEN_W          320U
+#define ARCADE_MENU_SCREEN_H          240U
 #define ARCADE_MENU_HEADER_H          36U
 #define ARCADE_MENU_TAB_Y             42U
 #define ARCADE_MENU_TAB_H             30U
@@ -64,6 +65,12 @@ uint8_t render_scratch_buffer[RENDER_SCRATCH_BUFFER_SIZE]
 #define ARCADE_MENU_CONFIRM_BUTTON_Y  148U
 #define ARCADE_MENU_CONFIRM_BUTTON_W  96U
 #define ARCADE_MENU_CONFIRM_BUTTON_H  34U
+
+#define ARCADE_MENU_REDRAW_NONE       0x00U
+#define ARCADE_MENU_REDRAW_FULL       0x01U
+#define ARCADE_MENU_REDRAW_BODY       0x02U
+#define ARCADE_MENU_REDRAW_LIST       0x04U
+#define ARCADE_MENU_REDRAW_CONFIRM    0x08U
 
 typedef enum {
     ARCADE_MENU_TOUCH_NONE = 0,
@@ -154,6 +161,15 @@ static void ArcadeMenu_ClampScroll(ArcadeMenuState *menu) {
 
 static uint16_t ArcadeMenu_AbsDiff(uint16_t a, uint16_t b) {
     return (a > b) ? (uint16_t)(a - b) : (uint16_t)(b - a);
+}
+
+static void ArcadeMenu_RequestRedraw(ArcadeMenuState *menu,
+                                     uint8_t flags) {
+    if ((flags & ARCADE_MENU_REDRAW_FULL) != 0U) {
+        menu->redraw_flags = ARCADE_MENU_REDRAW_FULL;
+    } else if ((menu->redraw_flags & ARCADE_MENU_REDRAW_FULL) == 0U) {
+        menu->redraw_flags |= flags;
+    }
 }
 
 static void ArcadeMenu_DrawCenteredText(uint16_t x,
@@ -406,10 +422,7 @@ static void ArcadeMenu_DrawConfirm(const ArcadeMenuState *menu) {
                                  DISPLAY_GREEN);
 }
 
-static void ArcadeMenu_Render(ArcadeMenuState *menu) {
-    ArcadeMenu_ClampScroll(menu);
-
-    DISPLAY_FillScreen_DMA(ARCADE_MENU_BG);
+static void ArcadeMenu_DrawHeader(void) {
     DISPLAY_FillRectangle_DMA(0U,
                               0U,
                               ARCADE_MENU_SCREEN_W,
@@ -427,7 +440,9 @@ static void ArcadeMenu_Render(ArcadeMenuState *menu) {
                             Font_7x10,
                             DISPLAY_CYAN,
                             ARCADE_MENU_HEADER);
+}
 
+static void ArcadeMenu_DrawTabs(const ArcadeMenuState *menu) {
     ArcadeMenu_DrawTab(
         ARCADE_MENU_TEST_TAB_X,
         "TESTS",
@@ -436,8 +451,9 @@ static void ArcadeMenu_Render(ArcadeMenuState *menu) {
         ARCADE_MENU_GAME_TAB_X,
         "GAMES",
         (menu->category == ARCADE_MENU_CATEGORY_GAMES) ? 1U : 0U);
-    ArcadeMenu_DrawList(menu);
+}
 
+static void ArcadeMenu_DrawFooter(void) {
     DISPLAY_WriteString_DMA(
         8U,
         222U,
@@ -445,12 +461,52 @@ static void ArcadeMenu_Render(ArcadeMenuState *menu) {
         Font_7x10,
         DISPLAY_GRAY,
         ARCADE_MENU_BG);
+}
 
-    if (menu->mode == ARCADE_MENU_MODE_CONFIRM) {
+static void ArcadeMenu_DrawBody(const ArcadeMenuState *menu) {
+    DISPLAY_FillRectangle_DMA(0U,
+                              ARCADE_MENU_HEADER_H,
+                              ARCADE_MENU_SCREEN_W,
+                              (uint16_t)(ARCADE_MENU_SCREEN_H -
+                                         ARCADE_MENU_HEADER_H),
+                              ARCADE_MENU_BG);
+    ArcadeMenu_DrawTabs(menu);
+    ArcadeMenu_DrawList(menu);
+    ArcadeMenu_DrawFooter();
+}
+
+static void ArcadeMenu_RenderQueued(ArcadeMenuState *menu) {
+    uint8_t flags = menu->redraw_flags;
+
+    if (flags == ARCADE_MENU_REDRAW_NONE) {
+        return;
+    }
+
+    ArcadeMenu_ClampScroll(menu);
+
+    if ((flags & ARCADE_MENU_REDRAW_FULL) != 0U) {
+        DISPLAY_FillScreen_DMA(ARCADE_MENU_BG);
+        ArcadeMenu_DrawHeader();
+        ArcadeMenu_DrawBody(menu);
+    } else if ((flags & ARCADE_MENU_REDRAW_BODY) != 0U) {
+        ArcadeMenu_DrawBody(menu);
+    } else if ((flags & ARCADE_MENU_REDRAW_LIST) != 0U) {
+        ArcadeMenu_DrawList(menu);
+    }
+
+    if ((menu->mode == ARCADE_MENU_MODE_CONFIRM) &&
+        ((flags & (ARCADE_MENU_REDRAW_FULL |
+                   ARCADE_MENU_REDRAW_BODY |
+                   ARCADE_MENU_REDRAW_CONFIRM)) != 0U)) {
         ArcadeMenu_DrawConfirm(menu);
     }
 
-    menu->needs_redraw = 0U;
+    menu->redraw_flags = ARCADE_MENU_REDRAW_NONE;
+}
+
+static void ArcadeMenu_Render(ArcadeMenuState *menu) {
+    ArcadeMenu_RequestRedraw(menu, ARCADE_MENU_REDRAW_FULL);
+    ArcadeMenu_RenderQueued(menu);
 }
 
 static void ArcadeMenu_Init(ArcadeMenuState *menu) {
@@ -458,7 +514,7 @@ static void ArcadeMenu_Init(ArcadeMenuState *menu) {
     menu->category = ARCADE_MENU_CATEGORY_TESTS;
     menu->mode = ARCADE_MENU_MODE_LIST;
     menu->pending_page = ARCADE_PAGE_SYSTEM_INFO;
-    menu->needs_redraw = 1U;
+    ArcadeMenu_RequestRedraw(menu, ARCADE_MENU_REDRAW_FULL);
 }
 
 static ArcadeMenuTouchRegion ArcadeMenu_HitConfirm(uint16_t x,
@@ -541,13 +597,13 @@ static void ArcadeMenu_SetCategory(ArcadeMenuState *menu,
     menu->category = category;
     menu->mode = ARCADE_MENU_MODE_LIST;
     ArcadeMenu_ClampScroll(menu);
-    menu->needs_redraw = 1U;
+    ArcadeMenu_RequestRedraw(menu, ARCADE_MENU_REDRAW_BODY);
 }
 
 static void ArcadeMenu_ToggleCategory(ArcadeMenuState *menu) {
     if (menu->mode == ARCADE_MENU_MODE_CONFIRM) {
         menu->mode = ARCADE_MENU_MODE_LIST;
-        menu->needs_redraw = 1U;
+        ArcadeMenu_RequestRedraw(menu, ARCADE_MENU_REDRAW_BODY);
         return;
     }
 
@@ -583,7 +639,7 @@ static void ArcadeMenu_SetScrollFromY(ArcadeMenuState *menu,
 
     if (menu->scroll_index[menu->category] != next_scroll) {
         menu->scroll_index[menu->category] = next_scroll;
-        menu->needs_redraw = 1U;
+        ArcadeMenu_RequestRedraw(menu, ARCADE_MENU_REDRAW_LIST);
     }
 }
 
@@ -613,7 +669,7 @@ static void ArcadeMenu_HandleListDrag(ArcadeMenuState *menu,
             (uint16_t)(menu->last_touch_y +
                        ARCADE_MENU_DRAG_STEP);
         dy = (int16_t)(dy - (int16_t)ARCADE_MENU_DRAG_STEP);
-        menu->needs_redraw = 1U;
+        ArcadeMenu_RequestRedraw(menu, ARCADE_MENU_REDRAW_LIST);
     }
 
     while ((dy <= -(int16_t)ARCADE_MENU_DRAG_STEP) &&
@@ -623,7 +679,7 @@ static void ArcadeMenu_HandleListDrag(ArcadeMenuState *menu,
             (uint16_t)(menu->last_touch_y -
                        ARCADE_MENU_DRAG_STEP);
         dy = (int16_t)(dy + (int16_t)ARCADE_MENU_DRAG_STEP);
-        menu->needs_redraw = 1U;
+        ArcadeMenu_RequestRedraw(menu, ARCADE_MENU_REDRAW_LIST);
     }
 }
 
@@ -640,7 +696,7 @@ static void ArcadeMenu_OpenConfirm(ArcadeMenuState *menu,
     menu->pending_page = item->page;
     menu->mode = ARCADE_MENU_MODE_CONFIRM;
     menu->ignore_until_release = 1U;
-    menu->needs_redraw = 1U;
+    ArcadeMenu_RequestRedraw(menu, ARCADE_MENU_REDRAW_CONFIRM);
 }
 
 static void ArcadeMenu_HandleRelease(ArcadeMenuState *menu,
@@ -661,11 +717,11 @@ static void ArcadeMenu_HandleRelease(ArcadeMenuState *menu,
         }
         if (release_region == ARCADE_MENU_TOUCH_CONFIRM_NO) {
             menu->mode = ARCADE_MENU_MODE_LIST;
-            menu->needs_redraw = 1U;
+            ArcadeMenu_RequestRedraw(menu, ARCADE_MENU_REDRAW_BODY);
         } else if (release_region == ARCADE_MENU_TOUCH_CONFIRM_YES) {
             *requested_page = menu->pending_page;
             menu->mode = ARCADE_MENU_MODE_LIST;
-            menu->needs_redraw = 1U;
+            ArcadeMenu_RequestRedraw(menu, ARCADE_MENU_REDRAW_BODY);
         }
         return;
     }
@@ -727,10 +783,19 @@ static void ArcadeMenu_Update(ArcadeMenuState *menu,
             ArcadeMenu_HitConfirm(touch_x, touch_y) :
             ArcadeMenu_HitList(touch_x, touch_y);
 
-        if ((menu->mode == ARCADE_MENU_MODE_LIST) &&
-            (menu->touch_region == ARCADE_MENU_TOUCH_SCROLLBAR)) {
-            menu->drag_started = 1U;
-            ArcadeMenu_SetScrollFromY(menu, touch_y);
+        if (menu->mode == ARCADE_MENU_MODE_LIST) {
+            if (menu->touch_region == ARCADE_MENU_TOUCH_TESTS_TAB) {
+                ArcadeMenu_SetCategory(menu,
+                                       ARCADE_MENU_CATEGORY_TESTS);
+            } else if (menu->touch_region ==
+                       ARCADE_MENU_TOUCH_GAMES_TAB) {
+                ArcadeMenu_SetCategory(menu,
+                                       ARCADE_MENU_CATEGORY_GAMES);
+            } else if (menu->touch_region ==
+                       ARCADE_MENU_TOUCH_SCROLLBAR) {
+                menu->drag_started = 1U;
+                ArcadeMenu_SetScrollFromY(menu, touch_y);
+            }
         }
     } else if (menu->ignore_until_release == 0U) {
         if ((menu->mode == ARCADE_MENU_MODE_LIST) &&
@@ -924,8 +989,9 @@ void ArcadeCollection_Update(ArcadeCollection *arcade,
             if (requested_page != ARCADE_PAGE_MENU) {
                 arcade->active_page = requested_page;
                 ArcadeCollection_RenderActive(arcade);
-            } else if (arcade->menu.needs_redraw != 0U) {
-                ArcadeMenu_Render(&arcade->menu);
+            } else if (arcade->menu.redraw_flags !=
+                       ARCADE_MENU_REDRAW_NONE) {
+                ArcadeMenu_RenderQueued(&arcade->menu);
             }
             break;
         }
@@ -1070,6 +1136,7 @@ void ArcadeCollection_Update(ArcadeCollection *arcade,
 void ArcadeCollection_NextPage(ArcadeCollection *arcade) {
     if (arcade->active_page == ARCADE_PAGE_MENU) {
         ArcadeMenu_ToggleCategory(&arcade->menu);
+        ArcadeMenu_RenderQueued(&arcade->menu);
     } else {
         arcade->active_page = ARCADE_PAGE_MENU;
         arcade->menu.mode = ARCADE_MENU_MODE_LIST;
@@ -1077,9 +1144,10 @@ void ArcadeCollection_NextPage(ArcadeCollection *arcade) {
         arcade->menu.touch_region = ARCADE_MENU_TOUCH_NONE;
         arcade->menu.drag_started = 0U;
         arcade->menu.ignore_until_release = 0U;
-        arcade->menu.needs_redraw = 1U;
+        ArcadeMenu_RequestRedraw(&arcade->menu,
+                                 ARCADE_MENU_REDRAW_FULL);
+        ArcadeCollection_RenderActive(arcade);
     }
-    ArcadeCollection_RenderActive(arcade);
 }
 
 void ArcadeCollection_RestartActive(ArcadeCollection *arcade) {

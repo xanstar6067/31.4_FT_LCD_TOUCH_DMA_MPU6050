@@ -87,7 +87,7 @@ typedef struct {
     uint8_t touch_region;
     uint8_t drag_started;
     uint8_t ignore_until_release;
-    uint8_t needs_redraw;
+    uint8_t redraw_flags;
 } ArcadeMenuState;
 
 typedef struct {
