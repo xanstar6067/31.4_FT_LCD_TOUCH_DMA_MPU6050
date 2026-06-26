@@ -26,6 +26,7 @@
 #include "life_game_logic.h"
 #include "marble_maze_logic.h"
 #include "micro_colony_logic.h"
+#include "comet_catch_logic.h"
 #include "mpu6000_page.h"
 #include "orb_hunt_logic.h"
 #include "shake_flight_logic.h"
@@ -39,6 +40,7 @@ typedef enum {
     ARCADE_PAGE_SYSTEM_INFO = 0,
     ARCADE_PAGE_MPU6000,
     ARCADE_PAGE_TOUCH_TEST,
+    ARCADE_PAGE_COMET_CATCH,
     ARCADE_PAGE_ORB_HUNT,
     ARCADE_PAGE_GRAVITY_PONG,
     ARCADE_PAGE_TILT_BREAKER,
@@ -64,6 +66,7 @@ typedef struct {
     SystemInfoPage system_info;
     MPU6000Page mpu6000;
     TouchTestPage touch_test;
+    CometCatchState comet_catch;
     OrbHuntState orb_hunt;
     GravityPongState gravity_pong;
     TiltBreakerState tilt_breaker;

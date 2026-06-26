@@ -6,6 +6,7 @@
 #if ARCADE_ENABLE_BIPLANE_DUEL
 #include "biplane_duel_render.h"
 #endif
+#include "comet_catch_render.h"
 #include "display_driver.h"
 #include "gravity_pong_render.h"
 #include "life_game_render.h"
@@ -85,6 +86,9 @@ static void ArcadeCollection_RenderActive(ArcadeCollection *arcade) {
             arcade->touch_test.renderer_initialized = 0U;
             TouchTestPage_Render(&arcade->touch_test);
             break;
+        case ARCADE_PAGE_COMET_CATCH:
+            CometCatchRender_Init(&arcade->comet_catch);
+            break;
         case ARCADE_PAGE_ORB_HUNT:
             OrbHuntRender_Init(&arcade->orb_hunt);
             break;
@@ -136,6 +140,8 @@ void ArcadeCollection_Init(ArcadeCollection *arcade, uint32_t seed) {
     SystemInfoPage_Init(&arcade->system_info);
     MPU6000Page_Init(&arcade->mpu6000);
     TouchTestPage_Init(&arcade->touch_test);
+    CometCatch_Init(&arcade->comet_catch,
+                    ArcadeCollection_NextSeed(arcade));
     OrbHunt_Init(&arcade->orb_hunt,
                  ArcadeCollection_NextSeed(arcade));
     GravityPong_Init(&arcade->gravity_pong,
@@ -183,6 +189,18 @@ void ArcadeCollection_Update(ArcadeCollection *arcade,
         case ARCADE_PAGE_TOUCH_TEST:
             TouchTestPage_Update(&arcade->touch_test);
             break;
+        case ARCADE_PAGE_COMET_CATCH: {
+            uint16_t touch_x = 0U;
+            uint16_t touch_y = 0U;
+            uint8_t touch_pressed =
+                ArcadeCollection_ReadTouch(&touch_x, &touch_y);
+            CometCatchEvent event =
+                CometCatch_Update(&arcade->comet_catch,
+                                  mpu_data->accel_x,
+                                  touch_pressed);
+            CometCatchRender_Frame(&arcade->comet_catch, event);
+            break;
+        }
         case ARCADE_PAGE_ORB_HUNT: {
             OrbHuntEvent event =
                 OrbHunt_Update(&arcade->orb_hunt,
@@ -319,6 +337,9 @@ void ArcadeCollection_RestartActive(ArcadeCollection *arcade) {
             break;
         case ARCADE_PAGE_TOUCH_TEST:
             TouchTestPage_Init(&arcade->touch_test);
+            break;
+        case ARCADE_PAGE_COMET_CATCH:
+            CometCatch_Init(&arcade->comet_catch, seed);
             break;
         case ARCADE_PAGE_ORB_HUNT:
             OrbHunt_Init(&arcade->orb_hunt, seed);
