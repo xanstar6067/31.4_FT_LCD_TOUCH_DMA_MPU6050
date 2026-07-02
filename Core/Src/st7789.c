@@ -212,15 +212,16 @@ void ST7789_DrawPixel(uint16_t x, uint16_t y, uint16_t color) {
 
 static void ST7789_WriteChar(uint16_t x,
                              uint16_t y,
-                             char ch,
+                             uint32_t codepoint,
                              FontDef font,
                              uint16_t color,
                              uint16_t bgcolor) {
     uint32_t i, b, j;
+    const uint16_t *glyph = Font_GetGlyph(font, codepoint);
 
     ST7789_SetAddressWindow(x, y, x + font.width - 1, y + font.height - 1);
     for (i = 0; i < font.height; i++) {
-        b = font.data[(ch - 32) * font.height + i];
+        b = glyph[i];
         for (j = 0; j < font.width; j++) {
             uint16_t pixel = ((b << j) & 0x8000) ? color : bgcolor;
             uint8_t data[] = {
@@ -240,18 +241,16 @@ void ST7789_WriteString(uint16_t x,
                         uint16_t bgcolor) {
     ST7789_Select();
     while (*str) {
+        uint32_t codepoint = Font_NextCodepoint(&str);
+
         if (x + font.width >= ST7789_SCREEN_WIDTH) {
             x = 0;
             y += font.height;
             if (y + font.height >= ST7789_SCREEN_HEIGHT) break;
-            if (*str == ' ') {
-                str++;
-                continue;
-            }
+            if (codepoint == ' ') continue;
         }
-        ST7789_WriteChar(x, y, *str, font, color, bgcolor);
+        ST7789_WriteChar(x, y, codepoint, font, color, bgcolor);
         x += font.width;
-        str++;
     }
     ST7789_Unselect();
 }
@@ -473,24 +472,24 @@ void ST7789_WriteString_DMA(uint16_t x,
                             uint16_t bgcolor) {
     ST7789_Select();
     while (*str) {
+        uint32_t codepoint = Font_NextCodepoint(&str);
+
         if (x + font.width >= ST7789_SCREEN_WIDTH) {
             x = 0;
             y += font.height;
             if (y + font.height >= ST7789_SCREEN_HEIGHT) break;
-            if (*str == ' ') {
-                str++;
-                continue;
-            }
+            if (codepoint == ' ') continue;
         }
 
         uint32_t b, j;
+        const uint16_t *glyph = Font_GetGlyph(font, codepoint);
         static uint8_t char_buffer[32 * 32 * 2];
         uint16_t char_width = font.width;
         uint16_t char_height = font.height;
         uint16_t buf_index = 0;
 
         for (uint16_t i = 0; i < char_height; i++) {
-            b = font.data[(*str - 32) * char_height + i];
+            b = glyph[i];
             for (j = 0; j < char_width; j++) {
                 uint16_t pixel = ((b << j) & 0x8000) ? color : bgcolor;
                 char_buffer[buf_index++] = (uint8_t)(pixel >> 8);
@@ -510,7 +509,6 @@ void ST7789_WriteString_DMA(uint16_t x,
         ST7789_WaitForDMA();
 
         x += font.width;
-        str++;
     }
     ST7789_Unselect();
 }

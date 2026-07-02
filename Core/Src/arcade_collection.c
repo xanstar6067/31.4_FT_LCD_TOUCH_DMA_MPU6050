@@ -88,28 +88,28 @@ typedef struct {
 } ArcadeMenuItem;
 
 static const ArcadeMenuItem arcade_menu_tests[] = {
-    { "SYSTEM INFO", ARCADE_PAGE_SYSTEM_INFO },
-    { "MPU6000", ARCADE_PAGE_MPU6000 },
-    { "TOUCH TEST", ARCADE_PAGE_TOUCH_TEST }
+    { "СИСТЕМА", ARCADE_PAGE_SYSTEM_INFO },
+    { "ДАТЧИК MPU6000", ARCADE_PAGE_MPU6000 },
+    { "ТЕСТ ЭКРАНА", ARCADE_PAGE_TOUCH_TEST }
 };
 
 static const ArcadeMenuItem arcade_menu_games[] = {
-    { "COMET CATCH", ARCADE_PAGE_COMET_CATCH },
-    { "ORB HUNT", ARCADE_PAGE_ORB_HUNT },
-    { "GRAVITY PONG", ARCADE_PAGE_GRAVITY_PONG },
-    { "TILT BREAKER", ARCADE_PAGE_TILT_BREAKER },
-    { "MARBLE MAZE", ARCADE_PAGE_MARBLE_MAZE },
-    { "SPACE DODGER", ARCADE_PAGE_SPACE_DODGER },
+    { "ЛОВЕЦ КОМЕТ", ARCADE_PAGE_COMET_CATCH },
+    { "ОХОТА ЗА СФЕРОЙ", ARCADE_PAGE_ORB_HUNT },
+    { "ПОНГ С ГРАВИТАЦИЕЙ", ARCADE_PAGE_GRAVITY_PONG },
+    { "РАЗБИВАТЕЛЬ", ARCADE_PAGE_TILT_BREAKER },
+    { "ШАРИК В ЛАБИРИНТЕ", ARCADE_PAGE_MARBLE_MAZE },
+    { "КОСМИЧЕСКИЙ БЕГЛЕЦ", ARCADE_PAGE_SPACE_DODGER },
 #if ARCADE_ENABLE_BALANCE_TOWER
-    { "BALANCE TOWER", ARCADE_PAGE_BALANCE_TOWER },
+    { "БАШНЯ БАЛАНСА", ARCADE_PAGE_BALANCE_TOWER },
 #endif
-    { "SHAKE FLIGHT", ARCADE_PAGE_SHAKE_FLIGHT },
+    { "ПОЛЁТ С ТРЯСКОЙ", ARCADE_PAGE_SHAKE_FLIGHT },
 #if ARCADE_ENABLE_BIPLANE_DUEL
-    { "BIPLANE DUEL", ARCADE_PAGE_BIPLANE_DUEL },
+    { "ДУЭЛЬ БИПЛАНОВ", ARCADE_PAGE_BIPLANE_DUEL },
 #endif
-    { "LIFE GAME", ARCADE_PAGE_LIFE_GAME },
-    { "MICRO COLONY", ARCADE_PAGE_MICRO_COLONY },
-    { "TETRIS", ARCADE_PAGE_TETRIS }
+    { "ИГРА ЖИЗНЬ", ARCADE_PAGE_LIFE_GAME },
+    { "МИКРОКОЛОНИЯ", ARCADE_PAGE_MICRO_COLONY },
+    { "ТЕТРИС", ARCADE_PAGE_TETRIS }
 };
 
 static const ArcadeMenuItem *ArcadeMenu_Items(
@@ -189,10 +189,10 @@ static void ArcadeMenu_DrawCenteredText(uint16_t x,
         return;
     }
 
-    text_width = (uint16_t)(strlen(text) * font->width);
+    text_width = Font_GetTextWidth(text, *font);
     if ((text_width + 4U) > width) {
         font = &Font_7x10;
-        text_width = (uint16_t)(strlen(text) * font->width);
+        text_width = Font_GetTextWidth(text, *font);
     }
 
     text_x = (uint16_t)(x + ((width > text_width) ?
@@ -234,7 +234,7 @@ static void ArcadeMenu_DrawTab(uint16_t x,
                                 ARCADE_MENU_TAB_W,
                                 ARCADE_MENU_TAB_H,
                                 label,
-                                &Font_11x18,
+                                &Font_10x18_Menu,
                                 text,
                                 fill);
 }
@@ -323,7 +323,7 @@ static void ArcadeMenu_DrawList(const ArcadeMenuState *menu) {
         DISPLAY_WriteString_DMA((uint16_t)(ARCADE_MENU_LIST_X + 18U),
                                 (uint16_t)(y + 7U),
                                 items[index].label,
-                                Font_11x18,
+                                Font_10x18_Menu,
                                 DISPLAY_WHITE,
                                 fill);
         DISPLAY_WriteString_DMA((uint16_t)(ARCADE_MENU_LIST_X +
@@ -367,7 +367,7 @@ static void ArcadeMenu_DrawConfirmButton(uint16_t x,
                                 ARCADE_MENU_CONFIRM_BUTTON_W,
                                 ARCADE_MENU_CONFIRM_BUTTON_H,
                                 label,
-                                &Font_11x18,
+                                &Font_10x18_Menu,
                                 DISPLAY_WHITE,
                                 fill);
 }
@@ -390,34 +390,36 @@ static void ArcadeMenu_DrawConfirm(const ArcadeMenuState *menu) {
                                 ARCADE_MENU_MODAL_W - 1U),
                      (uint16_t)(ARCADE_MENU_MODAL_Y +
                                 ARCADE_MENU_MODAL_H - 1U));
-    DISPLAY_WriteString_DMA(58U,
-                            62U,
-                            "CONFIRM START",
-                            Font_16x26,
-                            DISPLAY_WHITE,
-                            ARCADE_MENU_MODAL_BG);
+    ArcadeMenu_DrawCenteredText(48U,
+                                58U,
+                                224U,
+                                26U,
+                                "ПОДТВЕРДИТЕ ЗАПУСК",
+                                &Font_10x18_Menu,
+                                DISPLAY_WHITE,
+                                ARCADE_MENU_MODAL_BG);
     ArcadeMenu_DrawCenteredText(48U,
                                 96U,
                                 224U,
                                 20U,
                                 ArcadeMenu_PendingLabel(menu),
-                                &Font_11x18,
+                                &Font_10x18_Menu,
                                 DISPLAY_CYAN,
                                 ARCADE_MENU_MODAL_BG);
     ArcadeMenu_DrawCenteredText(48U,
                                 120U,
                                 224U,
-                                14U,
-                                "RUN THIS ITEM?",
-                                &Font_7x10,
+                                20U,
+                                "ЗАПУСТИТЬ?",
+                                &Font_10x18_Menu,
                                 DISPLAY_GRAY,
                                 ARCADE_MENU_MODAL_BG);
     ArcadeMenu_DrawConfirmButton(ARCADE_MENU_NO_X,
-                                 "NO",
+                                 "НЕТ",
                                  DISPLAY_COLOR565(56, 35, 40),
                                  DISPLAY_RED);
     ArcadeMenu_DrawConfirmButton(ARCADE_MENU_YES_X,
-                                 "YES",
+                                 "ДА",
                                  DISPLAY_COLOR565(30, 65, 48),
                                  DISPLAY_GREEN);
 }
@@ -429,9 +431,9 @@ static void ArcadeMenu_DrawHeader(void) {
                               ARCADE_MENU_HEADER_H,
                               ARCADE_MENU_HEADER);
     DISPLAY_WriteString_DMA(8U,
-                            5U,
-                            "MAIN MENU",
-                            Font_16x26,
+                            9U,
+                            "ГЛАВНОЕ МЕНЮ",
+                            Font_10x18_Menu,
                             DISPLAY_WHITE,
                             ARCADE_MENU_HEADER);
     DISPLAY_WriteString_DMA(246U,
@@ -445,11 +447,11 @@ static void ArcadeMenu_DrawHeader(void) {
 static void ArcadeMenu_DrawTabs(const ArcadeMenuState *menu) {
     ArcadeMenu_DrawTab(
         ARCADE_MENU_TEST_TAB_X,
-        "TESTS",
+        "ТЕСТЫ",
         (menu->category == ARCADE_MENU_CATEGORY_TESTS) ? 1U : 0U);
     ArcadeMenu_DrawTab(
         ARCADE_MENU_GAME_TAB_X,
-        "GAMES",
+        "ИГРЫ",
         (menu->category == ARCADE_MENU_CATEGORY_GAMES) ? 1U : 0U);
 }
 

@@ -155,12 +155,13 @@ void ILI9341_DrawPixel(uint16_t x, uint16_t y, uint16_t color) {
     ILI9341_Unselect();
 }
 
-static void ILI9341_WriteChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color, uint16_t bgcolor) {
+static void ILI9341_WriteChar(uint16_t x, uint16_t y, uint32_t codepoint, FontDef font, uint16_t color, uint16_t bgcolor) {
     uint32_t i, b, j;
+    const uint16_t *glyph = Font_GetGlyph(font, codepoint);
     ILI9341_SetAddressWindow(x, y, x + font.width - 1, y + font.height - 1);
 
     for (i = 0; i < font.height; i++) {
-        b = font.data[(ch - 32) * font.height + i];
+        b = glyph[i];
         for (j = 0; j < font.width; j++) {
             if ((b << j) & 0x8000) {
                 uint8_t data[] = { color >> 8, color & 0xFF };
@@ -176,15 +177,16 @@ static void ILI9341_WriteChar(uint16_t x, uint16_t y, char ch, FontDef font, uin
 void ILI9341_WriteString(uint16_t x, uint16_t y, const char* str, FontDef font, uint16_t color, uint16_t bgcolor) {
     ILI9341_Select();
     while (*str) {
+        uint32_t codepoint = Font_NextCodepoint(&str);
+
         if (x + font.width >= ILI9341_SCREEN_WIDTH) {
             x = 0;
             y += font.height;
             if (y + font.height >= ILI9341_SCREEN_HEIGHT) break;
-            if (*str == ' ') { str++; continue; }
+            if (codepoint == ' ') continue;
         }
-        ILI9341_WriteChar(x, y, *str, font, color, bgcolor);
+        ILI9341_WriteChar(x, y, codepoint, font, color, bgcolor);
         x += font.width;
-        str++;
     }
     ILI9341_Unselect();
 }
@@ -350,21 +352,24 @@ void ILI9341_FillRectangle_DMA(uint16_t x, uint16_t y, uint16_t w, uint16_t h, u
 void ILI9341_WriteString_DMA(uint16_t x, uint16_t y, const char* str, FontDef font, uint16_t color, uint16_t bgcolor) {
     ILI9341_Select();
     while (*str) {
+        uint32_t codepoint = Font_NextCodepoint(&str);
+
         if (x + font.width >= ILI9341_SCREEN_WIDTH) {
             x = 0;
             y += font.height;
             if (y + font.height >= ILI9341_SCREEN_HEIGHT) break;
-            if (*str == ' ') { str++; continue; }
+            if (codepoint == ' ') continue;
         }
 
         uint32_t b, j;
+        const uint16_t *glyph = Font_GetGlyph(font, codepoint);
         static uint8_t char_buffer[32 * 32 * 2]; // Максимальный размер шрифта 32x32
         uint16_t char_width = font.width;
         uint16_t char_height = font.height;
         uint16_t buf_index = 0;
 
         for (uint16_t i = 0; i < char_height; i++) {
-            b = font.data[(*str - 32) * char_height + i];
+            b = glyph[i];
             for (j = 0; j < char_width; j++) {
                 if ((b << j) & 0x8000) {
                     char_buffer[buf_index++] = color >> 8;
@@ -383,7 +388,6 @@ void ILI9341_WriteString_DMA(uint16_t x, uint16_t y, const char* str, FontDef fo
         ILI9341_WaitForDMA();
 
         x += font.width;
-        str++;
     }
     ILI9341_Unselect();
 }

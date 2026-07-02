@@ -1,6 +1,8 @@
 /* vim: set ai et ts=4 sw=4: */
 #include "fonts.h"
 
+#include "font_10x18_menu.inc"
+
 static const uint16_t Font7x10 [] = {
 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,  // sp
 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x0000, 0x1000, 0x0000, 0x0000,  // !
@@ -299,3 +301,93 @@ static const uint16_t Font16x26 [] = {
 FontDef Font_7x10 = {7,10,Font7x10};
 FontDef Font_11x18 = {11,18,Font11x18};
 FontDef Font_16x26 = {16,26,Font16x26};
+FontDef Font_10x18_Menu = {10,18,Font10x18MenuAscii};
+
+uint32_t Font_NextCodepoint(const char **text) {
+    const uint8_t *cursor = (const uint8_t *)*text;
+    uint8_t first = *cursor++;
+    uint32_t codepoint;
+    uint8_t continuation_count;
+
+    if (first < 0x80U) {
+        *text = (const char *)cursor;
+        return first;
+    }
+
+    if ((first & 0xE0U) == 0xC0U) {
+        codepoint = first & 0x1FU;
+        continuation_count = 1U;
+    } else if ((first & 0xF0U) == 0xE0U) {
+        codepoint = first & 0x0FU;
+        continuation_count = 2U;
+    } else if ((first & 0xF8U) == 0xF0U) {
+        codepoint = first & 0x07U;
+        continuation_count = 3U;
+    } else {
+        *text = (const char *)cursor;
+        return '?';
+    }
+
+    for (uint8_t i = 0U; i < continuation_count; i++) {
+        uint8_t next = *cursor;
+
+        if ((next & 0xC0U) != 0x80U) {
+            *text = (const char *)cursor;
+            return '?';
+        }
+        codepoint = (codepoint << 6U) | (next & 0x3FU);
+        cursor++;
+    }
+
+    *text = (const char *)cursor;
+    return codepoint;
+}
+
+const uint16_t *Font_GetGlyph(FontDef font, uint32_t codepoint) {
+    uint32_t cyrillic_index;
+
+    if ((codepoint >= 32U) && (codepoint <= 126U)) {
+        return &font.data[(codepoint - 32U) * font.height];
+    }
+
+    /* The compact menu font stores one uppercase shape for either case. */
+    if ((codepoint >= 0x0430U) && (codepoint <= 0x044FU)) {
+        codepoint -= 0x20U;
+    } else if (codepoint == 0x0451U) {
+        codepoint = 0x0401U;
+    }
+
+    if (font.data == Font_10x18_Menu.data) {
+        if ((codepoint >= 0x0410U) && (codepoint <= 0x0415U)) {
+            cyrillic_index = codepoint - 0x0410U;
+            return &Font10x18MenuCyrillic[cyrillic_index * font.height];
+        }
+        if (codepoint == 0x0401U) {
+            return &Font10x18MenuCyrillic[6U * font.height];
+        }
+        if ((codepoint >= 0x0416U) && (codepoint <= 0x042FU)) {
+            cyrillic_index = (codepoint - 0x0410U) + 1U;
+            return &Font10x18MenuCyrillic[cyrillic_index * font.height];
+        }
+    }
+
+    return &font.data[('?' - 32U) * font.height];
+}
+
+uint16_t Font_GetTextWidth(const char *text, FontDef font) {
+    uint32_t width = 0U;
+
+    if (text == 0) {
+        return 0U;
+    }
+
+    while (*text != '\0') {
+        (void)Font_NextCodepoint(&text);
+        width += font.width;
+        if (width > 0xFFFFU) {
+            return 0xFFFFU;
+        }
+    }
+
+    return (uint16_t)width;
+}
